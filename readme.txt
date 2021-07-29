@@ -5,7 +5,7 @@ Gearbox Config Path:
 
 Add .cc and .h files' path into the /src/traffic-control/wscript
 
-Add .cc and .h files' path into /build/ns3/traffic-control-model
+Add .cc and .h files' path into /build/ns3/traffic-control-model.h
 
 
 ==========
