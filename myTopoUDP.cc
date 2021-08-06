@@ -36,11 +36,68 @@
 #include "ns3/point-to-point-module.h"
 #include "ns3/applications-module.h"
 #include "ns3/traffic-control-module.h"
+#include "ns3/flow-monitor-module.h"
+#include "ns3/stats-module.h"
+#include "ns3/random-variable-stream.h"
+#include "ns3/netanim-module.h"
 
 using namespace ns3;
 
-NS_LOG_COMPONENT_DEFINE ("myTopoUDP");
+NS_LOG_COMPONENT_DEFINE ("MyTopoUDP");
 
+uint32_t previous1 = 0;
+uint32_t previous2 = 0;
+uint32_t previous3 = 0;
+Time prevTime1 = Seconds (0);
+Time prevTime2 = Seconds (0);
+Time prevTime3 = Seconds (0);
+double nSamplingPeriod = 1;
+double stopTime = 20.0; 
+
+static void
+ThroughputMonitor (FlowMonitorHelper* fmhelper, Ptr<FlowMonitor> monitor)
+{
+  //FlowMonitor::FlowStatsContainer stats = monitor->GetFlowStats ();
+  double localThrou = 0.0;
+  monitor->CheckForLostPackets ();
+  std::map<FlowId, FlowMonitor::FlowStats> stats = monitor->GetFlowStats ();
+  Ptr<Ipv4FlowClassifier> classifier = DynamicCast<Ipv4FlowClassifier> (fmhelper->GetClassifier ());
+  for (std::map<FlowId, FlowMonitor::FlowStats>::const_iterator i = stats.begin (); i != stats.end (); ++i){
+ 	Ipv4FlowClassifier::FiveTuple t = classifier->FindFlow (i->first);
+	Time curTime = Now ();
+	if ((t.sourceAddress=="10.1.1.2" && t.destinationAddress == "10.1.4.2")){
+        	//auto itr = flowStats.begin ();
+		std::ofstream thr ("UDPResult/14throughput.dat", std::ios::out | std::ios::app);
+                localThrou = 8 * (i->second.rxBytes - previous1) / (1024 * 1024 * (curTime.GetSeconds () - prevTime1.GetSeconds ())); 
+		thr <<  curTime.GetSeconds () << " " << localThrou << std::endl;
+		cout << "S:" << curTime.GetSeconds() << endl;
+		prevTime1 = curTime;
+		previous1 = i->second.rxBytes;
+		cout << "here==========1=============" << endl;
+   	}
+        if ((t.sourceAddress=="10.1.2.2" && t.destinationAddress == "10.1.4.2")){
+        	//auto itr = flowStats.begin ();
+		std::ofstream thr ("UDPResult/24throughput.dat", std::ios::out | std::ios::app);
+                localThrou = 8 * (i->second.rxBytes - previous2) / (1024 * 1024 * (curTime.GetSeconds () - prevTime2.GetSeconds ()));
+		thr <<  curTime.GetSeconds () << " " << localThrou << std::endl;
+		cout << "S:" << curTime.GetSeconds() << endl;
+		prevTime2 = curTime;
+		previous2 = i->second.rxBytes;
+		cout << "here==========2=============" << endl;
+   	}
+        if ((t.sourceAddress=="10.1.3.2" && t.destinationAddress == "10.1.4.2")){
+        	//auto itr = flowStats.begin ();
+		std::ofstream thr ("UDPResult/34throughput.dat", std::ios::out | std::ios::app);
+                localThrou = 8 * (i->second.rxBytes - previous3) / (1024 * 1024 * (curTime.GetSeconds () - prevTime3.GetSeconds ()));
+		thr <<  curTime.GetSeconds () << " " << localThrou << std::endl;
+		cout << "S:" << curTime.GetSeconds() << endl;
+		prevTime3 = curTime;
+		previous3 = i->second.rxBytes;
+		cout << "here==========3=============" << endl;
+   	}
+  }
+  Simulator::Schedule (Seconds(nSamplingPeriod), &ThroughputMonitor, fmhelper, monitor);
+}
 
 int
 main (int argc, char *argv[])
@@ -49,16 +106,16 @@ main (int argc, char *argv[])
   cmd.Parse (argc, argv);
   
   Time::SetResolution (Time::NS);
-  LogComponentEnable ("UdpEchoClientApplication", LOG_LEVEL_INFO);
-  LogComponentEnable ("UdpEchoServerApplication", LOG_LEVEL_INFO);
-  LogComponentEnable ("DropTailQueue", LOG_LEVEL_INFO);
+  //LogComponentEnable ("UdpEchoClientApplication", LOG_LEVEL_INFO);
+  //LogComponentEnable ("UdpEchoServerApplication", LOG_LEVEL_INFO);
+  //LogComponentEnable ("DropTailQueue", LOG_LEVEL_INFO);
 
   //创建节点
-  NodeContainer clientNodes, router, serverNode;
-  router.Create (1);// 0
+  NodeContainer clientNodes, routers, serverNode;
+  routers.Create (1);// 0
   clientNodes.Create (3);// 1,2,3
   serverNode.Create(1);// 4
-  NodeContainer nodes = NodeContainer(router, clientNodes, serverNode);
+  NodeContainer nodes = NodeContainer(routers, clientNodes, serverNode);
   //各条边的节点组合,一共12条边
   std::vector<NodeContainer> nodeAdjacencyList(4);  
   nodeAdjacencyList[0]=NodeContainer(nodes.Get(0),nodes.Get(1));//router(0),A(1)
@@ -66,19 +123,21 @@ main (int argc, char *argv[])
   nodeAdjacencyList[2]=NodeContainer(nodes.Get(0),nodes.Get(3));//router(0),A(3)
   nodeAdjacencyList[3]=NodeContainer(nodes.Get(0),nodes.Get(4));//router(0),S(4)
 
-
   /*配置信道*/
   std::vector<PointToPointHelper> p2p(4);  
+  p2p[0].SetDeviceAttribute ("DataRate", StringValue ("10Mbps"));//设置带宽
+  p2p[0].SetChannelAttribute ("Delay", StringValue ("1ms"));  //设置时延
+  p2p[0].SetQueue ("ns3::DropTailQueue", "MaxPackets", UintegerValue(1000));
   //高速路段
-  for(int i = 0; i < 3; i ++){
+  for(int i = 1; i < 3; i ++){
     p2p[i].SetDeviceAttribute ("DataRate", StringValue ("10Mbps"));//设置带宽
     p2p[i].SetChannelAttribute ("Delay", StringValue ("1ms"));  //设置时延
-    p2p[i].SetQueue ("ns3::DropTailQueue", "MaxPackets", UintegerValue(50));
+    p2p[i].SetQueue ("ns3::DropTailQueue", "MaxPackets", UintegerValue(1000));
   }
-  //瓶颈路段1
-  p2p[3].SetDeviceAttribute ("DataRate", StringValue ("1Mbps"));
+  //瓶颈路段
+  p2p[3].SetDeviceAttribute ("DataRate", StringValue ("10Mbps"));
   p2p[3].SetChannelAttribute ("Delay", StringValue ("2ms"));  
-  p2p[3].SetQueue ("ns3::DropTailQueue", "MaxPackets", UintegerValue(50));
+  p2p[3].SetQueue ("ns3::DropTailQueue", "MaxPackets", UintegerValue(1000));
  
 
   std::vector<NetDeviceContainer> devices(4);
@@ -124,36 +183,46 @@ main (int argc, char *argv[])
   PacketSinkHelper sinkHelper ("ns3::UdpSocketFactory", sinkLocalAddress);
   ApplicationContainer sinkApp = sinkHelper.Install (nodes.Get(4));
   sinkApp.Start (Seconds (0));
-  sinkApp.Stop (Seconds (15));
+  sinkApp.Stop (Seconds (stopTime+1));
 
   AddressValue remoteAddress (InetSocketAddress (interfaces[3].GetAddress (1), port));
   OnOffHelper sourceHelper ("ns3::UdpSocketFactory", Address ());
   sourceHelper.SetAttribute ("DataRate", StringValue ("10Mbps"));
   sourceHelper.SetAttribute ("PacketSize", UintegerValue (1024));
   sourceHelper.SetAttribute ("Remote", remoteAddress);
+  sourceHelper.SetAttribute ("OnTime", StringValue ("ns3::ConstantRandomVariable[Constant=1]"));  
+  sourceHelper.SetAttribute ("OffTime", StringValue ("ns3::ConstantRandomVariable[Constant=0]")); 
 
   ApplicationContainer sourceApp1 = sourceHelper.Install (nodes.Get(1)); //A1
   ApplicationContainer sourceApp2 = sourceHelper.Install (nodes.Get(2)); //A2
   ApplicationContainer sourceApp3 = sourceHelper.Install (nodes.Get(3)); //A3
   sourceApp1.Start (Seconds (1));
-  sourceApp1.Stop (Seconds (5));
+  sourceApp1.Stop (Seconds (stopTime - 1));
   sourceApp2.Start (Seconds (1));
-  sourceApp2.Stop (Seconds (5));
+  sourceApp2.Stop (Seconds (stopTime - 1));
   sourceApp3.Start (Seconds (1));
-  sourceApp3.Stop (Seconds (5));
+  sourceApp3.Stop (Seconds (stopTime - 1));
 
-
+  /*
   AsciiTraceHelper ascii;
   p2p[0].EnableAsciiAll (ascii.CreateFileStream ("UDPResult/first_pip1.tr"));
   p2p[1].EnableAsciiAll (ascii.CreateFileStream ("UDPResult/first_pip2.tr"));
   p2p[2].EnableAsciiAll (ascii.CreateFileStream ("UDPResult/first_pip3.tr"));
   p2p[3].EnableAsciiAll (ascii.CreateFileStream ("UDPResult/first_pip4.tr"));
-
+  */
 
   for(uint32_t i=0; i<4; i++)  
-      p2p[i].EnablePcapAll("UDP/mytest"); 
+      p2p[i].EnablePcapAll("UDPResult/mytest"); 
 
-  Simulator::Run ();
+
+  FlowMonitorHelper flowmon;
+  Ptr<FlowMonitor> monitor = flowmon.Install(nodes);
+
+  Simulator::Stop (Seconds(stopTime));
+
+  ThroughputMonitor (&flowmon, monitor);
+
+  Simulator::Run ();  
   Simulator::Destroy ();
   return 0;
 }
