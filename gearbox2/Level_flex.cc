@@ -82,18 +82,9 @@ namespace ns3 {
 	GearboxPktTag tag;
 	item->GetPacket()->PeekPacketTag(tag);
 	int departureRound = tag.GetDepartureRound();
-	cout << "3333333333333333:" << tag.GetDepartureRound() << endl;
-	GearboxPktTag tag2;
-	item->GetPacket()->PeekPacketTag(tag2);
-	cout << "4444444444444444:" << tag2.GetDepartureRound() << endl;
-	// if if exceeds H
-	if ((pifo.Size() > H_value || pifo.Size() == H_value) && (departureRound > getPifoMaxValue() || departureRound == getPifoMaxValue())) {
-	    fifoEnque(item, tag.GetIndex());
-	}       
-	else{
-	    cout << "555555555555555:" << tag.GetDepartureRound() << endl;
+	// enque into pifo, if havePifo && ( < maxValue || < L)
+	if (departureRound < getPifoMaxValue() || pifo.Size() < pifo.LowestSize()) {
 	    vector<QueueDiscItem*> re = pifo.Push(item, tag.GetDepartureRound());
-	    cout << "re.size():" << re.size() << endl;
 	    while(re.size() != 0){
 		QueueDiscItem* reItem = re.back();
 		GearboxPktTag tag;
@@ -101,6 +92,10 @@ namespace ns3 {
 	        fifoEnque(reItem, tag.GetIndex()); // get the last item
 		re.pop_back(); // delete the last item
 	    }
+	}
+	// enque into fifo     
+	else{
+	    fifoEnque(item, tag.GetIndex());
 	}
 	ifLowerThanLthenReload();     
     }
@@ -134,13 +129,13 @@ namespace ns3 {
    
     QueueDiscItem* Level_flex::pifoDeque() {
         NS_LOG_FUNCTION(this);
-        Ptr<QueueDiscItem> item = pifo.Pop();
+        QueueDiscItem* item = pifo.Pop();
         ifLowerThanLthenReload();
-        return GetPointer(item);
+        return item;
     }
 
 
-    QueueDiscItem* Level_flex::fifodeque() {
+    QueueDiscItem* Level_flex::fifoDeque() {
         if (isCurrentFifoEmpty()) {
             return 0;
         }
@@ -177,9 +172,6 @@ namespace ns3 {
     }
 
     bool Level_flex::isCurrentFifoEmpty() {
-        //fprintf(stderr, "Checking if the FIFO is empty\n"); // Debug: Peixuan 07062019
-        //fifos[currentIndex]->length() == 0;
-        //fprintf(stderr, "Bug here solved\n"); // Debug: Peixuan 07062019
         return fifos[currentIndex]->IsEmpty();
     }
 
@@ -189,7 +181,6 @@ namespace ns3 {
 
     int Level_flex::size() {
         // get fifo number
-        //return fifos.size();
         return sizeof(fifos) / sizeof(fifos[0]);
     }
 
