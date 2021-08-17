@@ -41,6 +41,7 @@ namespace ns3 {
         void pifoEnque(QueueDiscItem* item);
         QueueDiscItem* pifoDeque();
         QueueDiscItem* deque();
+	QueueDiscItem* fifopeek();
 
         int getCurrentIndex();
         void setCurrentIndex(int index);             // 07212019 Peixuan: set serving FIFO (especially for convergence FIFO)

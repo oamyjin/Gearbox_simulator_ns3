@@ -48,16 +48,15 @@ namespace ns3 {
     }
 
     void Level_flex::enque(QueueDiscItem* item, int index) {
-	/*GearboxPktTag tag;
-	item->GetPacket()->PeekPacketTag(tag);
-	int departureRound = tag.GetDepartureRound();
-	cout << "====enque() departureRound:" << departureRound << endl;*/
-        if (getPifoMaxValue() > getFifoTopValue()){
-	    this->fifoEnque(item, index);
-	}
-        else{
-	    this->pifoEnque(item);
-        }
+	GearboxPktTag tag1;
+	item->GetPacket()->PeekPacketTag(tag1);
+	cout << "1111111111111111:" << tag1.GetDepartureRound() << endl;
+	GearboxPktTag tag2;
+	item->GetPacket()->PeekPacketTag(tag2);
+	cout << "2222222222222222:" << tag2.GetDepartureRound() << endl;
+	   
+	this->pifoEnque(item);
+	cout << "getPifoMaxValue: " << getPifoMaxValue() << endl;
     }       
 
     void Level_flex::enque(QueueDiscItem* item, int index, bool isPifoEnque) {
@@ -75,46 +74,25 @@ namespace ns3 {
         pkt_cnt++;
     }
 
-    QueueDiscItem* Level_flex::deque() {
-        if (isCurrentFifoEmpty()) {
-            return 0;
-        }
-        Ptr<QueueDiscItem> item = StaticCast<QueueDiscItem>(fifos[currentIndex]->Dequeue());
-        pkt_cnt--;
-        return GetPointer(item);
-    }
-
-
     //gearbox2
     void Level_flex::pifoEnque(QueueDiscItem* item) {
         NS_LOG_FUNCTION(this);
+	cout << "PIFO item:" << item << endl;
 	// get the tag of item
 	GearboxPktTag tag;
 	item->GetPacket()->PeekPacketTag(tag);
 	int departureRound = tag.GetDepartureRound();
-	cout << "pifoEnque() departureRound:" << departureRound << endl;
+	cout << "3333333333333333:" << tag.GetDepartureRound() << endl;
+	GearboxPktTag tag2;
+	item->GetPacket()->PeekPacketTag(tag2);
+	cout << "4444444444444444:" << tag2.GetDepartureRound() << endl;
 	// if if exceeds H
 	if ((pifo.Size() > H_value || pifo.Size() == H_value) && (departureRound > getPifoMaxValue() || departureRound == getPifoMaxValue())) {
 	    fifoEnque(item, tag.GetIndex());
 	}       
 	else{
-	    // enque into pifo, get those exceed H_value
-	    cout << "============================" << endl;
-	    PacketTagIterator::Item ititem = item->GetPacket()->GetPacketTagIterator().Next();
-            NS_ASSERT (ititem.GetTypeId ().HasConstructor ());
-	    cout << "-1---------------------------" << endl;
-	    Callback<ObjectBase *> constructor = ititem.GetTypeId ().GetConstructor ();
-            NS_ASSERT (!constructor.IsNull ());
-	    cout << "-2---------------------------" << endl;
-	    ObjectBase *instance = constructor ();
-	    cout << "-3---------------------------" << endl;
-	    GearboxPktTag *tag = dynamic_cast<GearboxPktTag *> (instance);
-	    cout << "-4---------------------------" << tag->GetInstanceTypeId () << endl;
-	    ititem.GetTag (*tag);
-	    cout << "-5---------------------------" << endl;
-            cout << tag->GetDepartureRound() << " " << tag->GetIndex() << endl;
-	    cout << "============================" << endl;	
-	    vector<QueueDiscItem*> re = pifo.Push(item, departureRound);
+	    cout << "555555555555555:" << tag.GetDepartureRound() << endl;
+	    vector<QueueDiscItem*> re = pifo.Push(item, tag.GetDepartureRound());
 	    cout << "re.size():" << re.size() << endl;
 	    while(re.size() != 0){
 		QueueDiscItem* reItem = re.back();
@@ -142,7 +120,7 @@ namespace ns3 {
         while (pifo.Size() > pifo.HighestSize()){
             QueueDiscItem* lastPacket = pifo.PopFromBottom();
             fifoEnque(lastPacket, currentIndex);
-        }      
+        }    
     }   
 
     int Level_flex::getEarliestFifo() {
@@ -158,6 +136,25 @@ namespace ns3 {
         NS_LOG_FUNCTION(this);
         Ptr<QueueDiscItem> item = pifo.Pop();
         ifLowerThanLthenReload();
+        return GetPointer(item);
+    }
+
+
+    QueueDiscItem* Level_flex::fifodeque() {
+        if (isCurrentFifoEmpty()) {
+            return 0;
+        }
+        Ptr<QueueDiscItem> item = StaticCast<QueueDiscItem>(fifos[currentIndex]->Dequeue());
+        pkt_cnt--;
+        return GetPointer(item);
+
+    }
+
+    QueueDiscItem* Level_flex::fifopeek() {
+        if (isCurrentFifoEmpty()) {
+            return 0;
+        }
+        Ptr<QueueDiscItem> item = StaticCast<QueueDiscItem>(fifos[currentIndex]->Peek());
         return GetPointer(item);
     }
 

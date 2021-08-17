@@ -198,6 +198,7 @@ namespace ns3 {
                 //this->updateFlowPtr(iph->saddr(), iph->daddr(),currFlow);  //12182019 Peixuan
                 this->updateFlowPtr(iph.GetFlowLabel(), currFlow);  // Peixuan 04212020 fid
 		// Add Pkt Tag
+		cout << "departureRound:" << departureRound << " index:" << (departureRound % FIFO_PER_LEVEL) << " item:" << GetPointer(item) << endl;    
    		GetPointer(item)->GetPacket()->AddPacketTag(GearboxPktTag(departureRound, departureRound % FIFO_PER_LEVEL));
                 levels[0].enque(GetPointer(item), departureRound % FIFO_PER_LEVEL);
                 ///fprintf(stderr, "Enqueue Level 0, regular FIFO, fifo %d\n", departureRound % 4); // Debug: Peixuan 07072019
@@ -250,19 +251,12 @@ namespace ns3 {
 
         float curWeight = currFlow->getWeight();
         int curLastDepartureRound = currFlow->getLastDepartureRound();
+	// update the flow's last departure Round
+	currFlow->setLastDepartureRound(int(curLastDepartureRound + curWeight));
         int curStartRound = max(currentRound, curLastDepartureRound);
+        //int curDeaprtureRound = (int)(curStartRound + curWeight);
+	int curDeaprtureRound = curStartRound;
 
-        ///fprintf(stderr, "$$$$$Last Departure Round of Flow%d = %d\n",iph->saddr() , curLastDepartureRound); // Debug: Peixuan 07062019
-        ///fprintf(stderr, "$$$$$Start Departure Round of Flow%d = %d\n",iph->saddr() , curStartRound); // Debug: Peixuan 07062019
-
-        //int curDeaprtureRound = (int)(curStartRound + pkt_size/curWeight); // TODO: This line needs to take another thought
-
-        int curDeaprtureRound = (int)(curStartRound + curWeight); // 07072019 Peixuan: basic test
-        //cout << "curWeight" << curWeight << endl;
-
-        ///fprintf(stderr, "$$$$$At Round: %d, Calculated Packet From Flow:%d with Departure Round = %d\n", currentRound, iph->saddr(), curDeaprtureRound); // Debug: Peixuan 07062019
-        // TODO: need packet length and bandwidh relation
-        //flows[curFlowID].setLastDepartureRound(curDeaprtureRound);
         return curDeaprtureRound;
     }
 
