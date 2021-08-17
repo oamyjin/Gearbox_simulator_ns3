@@ -45,7 +45,6 @@ namespace ns3 {
 		vector<QueueDiscItem*> re;
 		if (list.size() == 0){
 			cout << "====" << endl;
-<<<<<<< HEAD
 			//Print();
 			list.push_back(item);
 			GearboxPktTag tag;
@@ -54,12 +53,6 @@ namespace ns3 {
 			GearboxPktTag tag1;
 			list.at(list.size()-1)->GetPacket()->PeekPacketTag(tag1);
 			cout << "size()-1 = " << list.size()-1 << ": "<< tag1.GetDepartureRound() << " index:" << tag.GetIndex() << endl;
-=======
-			Print();
-			list.push_back(item);
-			list[size-1]
-			list[0]
->>>>>>> ea3714771c5862134da9a0621545a87647f7a068
 			UpdateMaxValue();
 		}
 		else{
