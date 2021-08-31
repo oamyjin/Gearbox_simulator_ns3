@@ -24,51 +24,51 @@
 
 namespace ns3 {
 
-class GearboxPktTag : public Tag
-{
-public:
-  /**
-   * \brief Get the type ID.
-   * \return the object TypeId
-   */
-  static TypeId GetTypeId (void);
-  virtual TypeId GetInstanceTypeId (void) const;
-  virtual uint32_t GetSerializedSize (void) const;
-  virtual void Serialize (TagBuffer buf) const;
-  virtual void Deserialize (TagBuffer buf);
-  virtual void Print (std::ostream &os) const;
-  GearboxPktTag ();
-  
-  /**
-   *  Constructs a FlowIdTag with the given flow id
-   *
-   *  \param departure round and fifo index to use for the tag
-   */
-  GearboxPktTag (int departureRound, int index);
-  /**
-   *  Sets the departure round for the tag
-   *  \param departure round to assign to the tag
-   */
-  void SetDepartureRound (int departureRound);
-  /**
-   *  Sets the fifo index for the tag
-   *  \param fifo index to assign to the tag
-   */
-  void SetIndex (int index);
-  /**
-   *  Gets the departure round for the tag
-   *  \returns current departure round for this tag
-   */
-  int GetDepartureRound (void) const;
-  /**
-   *  Gets the fifo index for the tag
-   *  \returns fifo index for this tag
-   */
-  int GetIndex (void) const;
-private:
-  int departureRound; //!< Flow ID
-  int index; // fifo index
-};
+	class GearboxPktTag : public Tag
+	{
+	public:
+		/**
+		 * \brief Get the type ID.
+		 * \return the object TypeId
+		 */
+		static TypeId GetTypeId(void);
+		virtual TypeId GetInstanceTypeId(void) const;
+		virtual uint32_t GetSerializedSize(void) const;
+		virtual void Serialize(TagBuffer buf) const;
+		virtual void Deserialize(TagBuffer buf);
+		virtual void Print(std::ostream& os) const;
+		GearboxPktTag();
+
+		/**
+		 *  Constructs a FlowIdTag with the given flow id
+		 *
+		 *  \param departure round and fifo index to use for the tag
+		 */
+		GearboxPktTag(int departureRound, int index);
+		/**
+		 *  Sets the departure round for the tag
+		 *  \param departure round to assign to the tag
+		 */
+		void SetDepartureRound(int departureRound);
+		/**
+		 *  Sets the fifo index for the tag
+		 *  \param fifo index to assign to the tag
+		 */
+		void SetIndex(int index);
+		/**
+		 *  Gets the departure round for the tag
+		 *  \returns current departure round for this tag
+		 */
+		int GetDepartureRound(void) const;
+		/**
+		 *  Gets the fifo index for the tag
+		 *  \returns fifo index for this tag
+		 */
+		int GetIndex(void) const;
+	private:
+		int departureRound; //!< Flow ID
+		int index; // fifo index
+	};
 
 } // namespace ns3
 
