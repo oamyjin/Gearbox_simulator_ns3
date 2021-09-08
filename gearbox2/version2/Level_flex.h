@@ -34,6 +34,8 @@ namespace ns3 {
 
         static const int FIFO_PER_LEVEL = 8;
 
+        static const int DEFAULT_FIFO_N_SIZE = 10;
+
         int volume;                         // num of fifos in one level
 
         int currentIndex;                   // current serve index
@@ -54,9 +56,9 @@ namespace ns3 {
 
         uint32_t m_limit;    //!< Maximum number of packets that can be stored 
 
-        int H_value = 1000;    //high threshold of pifo
+        int H_value = 20;    //high threshold of pifo
 
-        int L_value = 300;    //low threshold of pifo
+        int L_value = 10;    //low threshold of pifo
 
 
 
@@ -103,6 +105,8 @@ namespace ns3 {
         void getAndIncrementIndex();
 
         int getCurrentFifoSize();
+	
+	int getCurrentFifoNPackets();
 
         bool isCurrentFifoEmpty();
 

@@ -87,81 +87,43 @@ namespace ns3 {
 
 
     int Gearbox_pl_fid_flex::findearliestpacket(int volume) {
-
         int level_min = 0;
+        int tag_min = 99999999;
 
-        int tag_min = 99999;
-
-        GearboxPktTag tag;
-
+	// find the earliest pkt in pifos
         for (int i = 1; i < volume; i++) {
-
             QueueDiscItem* item = levels[i].pifopeek();
-
             if (item == NULL) {
-
                 continue;
-
             }
-
             Packet* packet = GetPointer(item->GetPacket());
-
+            GearboxPktTag tag;
             packet->PeekPacketTag(tag);
-
-            int departureRound = tag.GetDepartureRound();
-
-
-
-            if ((i == 1) | (departureRound < tag_min)) {
-
+            int departureRound = tag.GetDepartureRound(); // tag of the peeked pkt
+	    cout << " --pifopeek:" << departureRound << endl;
+            if (i == 1 || departureRound < tag_min) {
                 tag_min = departureRound;
-
                 level_min = i;
-
             }
-
         }
 
         const QueueItem* item = levels[0].fifopeek();
-
-        Packet* packet = GetPointer(item->GetPacket());
-
-        packet->PeekPacketTag(tag);
-
-        int departureRound = tag.GetDepartureRound();
-
-        if (departureRound <= tag_min) { //deque level0 first?
-
-            tag_min = departureRound;
-
-            level_min = 0;
-
-            return 0;
-
-        }
-
-        else {
-
-            return level_min;
-
-        }
-
+	// if there is any pkt in level0
+        if (item != NULL){
+		Packet* packet = GetPointer(item->GetPacket());
+		GearboxPktTag tag;
+		packet->PeekPacketTag(tag);
+		int departureRound = tag.GetDepartureRound();
+		cout << "--2--depRound:" << departureRound << " tag_min:" << tag_min << endl;
+		if (departureRound <= tag_min) { //deque level0 first?
+		    tag_min = departureRound;
+		    level_min = 0;
+		    return 0;
+		}
+	}
+	cout << "level_min:" << level_min << " tag_min:" << tag_min << endl;
+	return level_min;
     }
-
-
-
-
-
-    void Gearbox_pl_fid_flex::PrintSomething(const std::string& strInput, const int& nInput)
-
-    {
-
-        std::cout << strInput << nInput << std::endl;
-
-    }
-
-
-
 
 
     void Gearbox_pl_fid_flex::setCurrentRound(int currentRound) {//to be considered
@@ -185,22 +147,15 @@ namespace ns3 {
 
 
     bool Gearbox_pl_fid_flex::DoEnqueue(Ptr<QueueDiscItem> item) {
-
-
-
-
-
         NS_LOG_FUNCTION(this);
 
         Packet* packet = GetPointer(GetPointer(item)->GetPacket());
 
         //PppHeader* ppp = new PppHeader();
 
+	//modify 
 
-
-            //modify 
-
-            //Header iph4;
+        //Header iph4;
 
         Ipv6Header iph;
 
@@ -214,7 +169,7 @@ namespace ns3 {
 
         //cout<<"the destination address is"<<iph4.GetDestination()<<endl;
 
-            //Ipv6Header *ipv6Header = dynamic_cast<Ipv6Header*> (iph);
+        //Ipv6Header *ipv6Header = dynamic_cast<Ipv6Header*> (iph);
 
         int pkt_size = packet->GetSize();
 
@@ -240,22 +195,15 @@ namespace ns3 {
 
         }
 
-
-
-
-
         Flow_pl* currFlow = flowMap[key];
 
         int insertLevel = currFlow->getInsertLevel();
 
-
-
         departureRound = max(departureRound, currentRound);
 
 
-
         if ((departureRound / (FIFO_PER_LEVEL * FIFO_PER_LEVEL) - currentRound / (FIFO_PER_LEVEL * FIFO_PER_LEVEL)) >= FIFO_PER_LEVEL) {
-
+	    cout << " DROP!!! too large tag: departureRound:"  << departureRound << " currentRound:" << currentRound << endl;
             Drop(item);
 
             return false;   // 07072019 Peixuan: exceeds the maximum round
@@ -263,13 +211,10 @@ namespace ns3 {
         }
 
 
-
-
-
         int curBrustness = currFlow->getBrustness();
 
         if ((departureRound - currentRound) >= curBrustness) {
-
+	    cout << " DROP!!! too burst: departureRound:"  << departureRound << " currentRound:" << currentRound << " curBrustness:" << curBrustness << endl;
             Drop(item);
 
             return false;   // 07102019 Peixuan: exceeds the maximum brustness
@@ -289,30 +234,18 @@ namespace ns3 {
 
 
         // LEVEL_2
-
-        if (departureRound / (FIFO_PER_LEVEL * FIFO_PER_LEVEL) - currentRound / (FIFO_PER_LEVEL * FIFO_PER_LEVEL) > 1 || insertLevel == 2) {
-
-
-
-            //gearbox2             
-
+	
+        if (departureRound - currentRound > (FIFO_PER_LEVEL * FIFO_PER_LEVEL) || departureRound - currentRound == (FIFO_PER_LEVEL * FIFO_PER_LEVEL) || insertLevel == 2) {
             currFlow->setInsertLevel(2);
-
             this->updateFlowPtr(iph.GetFlowLabel(), currFlow);  // Peixuan 04212020 fid
-
-    // Add Pkt Tag
-
+	    // Add Pkt Tag
             GetPointer(GetPointer(item)->GetPacket())->AddPacketTag(GearboxPktTag(departureRound, departureRound / (FIFO_PER_LEVEL * FIFO_PER_LEVEL) % FIFO_PER_LEVEL));
-
+	    cout << "GB L2 ep departureRound:" << departureRound  << " currentRound:" << currentRound << " index:" << departureRound / (FIFO_PER_LEVEL * FIFO_PER_LEVEL) % FIFO_PER_LEVEL << endl;
             levels[2].enque(GetPointer(item), departureRound / (FIFO_PER_LEVEL * FIFO_PER_LEVEL) % FIFO_PER_LEVEL, 1);
-
-
-
             // LEVEL_1
-
         }
 
-        else if (departureRound / FIFO_PER_LEVEL - currentRound / FIFO_PER_LEVEL > 1 || insertLevel == 1) {
+        else if (departureRound - currentRound > FIFO_PER_LEVEL || departureRound - currentRound == FIFO_PER_LEVEL || insertLevel == 1) {
 
             this->updateFlowPtr(iph.GetFlowLabel(), currFlow);  // Peixuan 04212020 fid
 
@@ -321,7 +254,7 @@ namespace ns3 {
             GetPointer(GetPointer(item)->GetPacket())->AddPacketTag(GearboxPktTag(departureRound, departureRound / FIFO_PER_LEVEL % FIFO_PER_LEVEL));
 
             currFlow->setInsertLevel(1);
-
+	    cout << "GB L1 ep departureRound:" << departureRound << " currentRound:" << currentRound << endl;
             levels[1].enque(GetPointer(item), departureRound / FIFO_PER_LEVEL % FIFO_PER_LEVEL, 1);
 
             // LEVEL_0
@@ -337,25 +270,14 @@ namespace ns3 {
     // Add Pkt Tag
 
             GetPointer(item)->GetPacket()->AddPacketTag(GearboxPktTag(departureRound, departureRound % FIFO_PER_LEVEL));
-
+	    cout << "GB L0 ef departureRound:" << departureRound << " currentRound:" << currentRound << " index:" << departureRound % FIFO_PER_LEVEL << endl;
             levels[0].enque(GetPointer(item), departureRound % FIFO_PER_LEVEL, 0);
-
-
-
         }
 
-
-
         setPktCount(pktCount + 1);
-
-
-
         NS_LOG_INFO("At time " << Simulator::Now().GetSeconds() << " Enque " << packet << " Pkt:" << packet->GetUid());
 
         return true;
-
-
-
     }
 
 
@@ -383,20 +305,8 @@ namespace ns3 {
         string key = convertKeyValue(iph.GetFlowLabel());    // Peixuan 04212020 fid
 
         Flow_pl* currFlow = this->getFlowPtr(iph.GetFlowLabel()); // Peixuan 04212020 fid
-
-
-
-
-
-
-
         //float curWeight = currFlow->getWeight();
-
-
-
         int curLastFinishRound = currFlow->getLastFinishRound();
-
-
 
         int curStartRound = max(currentRound, curLastFinishRound);//curLastDepartureRound should be curLastFinishRound
 
@@ -421,18 +331,11 @@ namespace ns3 {
 
 
     Ptr<QueueDiscItem> Gearbox_pl_fid_flex::DoDequeue() {
-
-
-
         if (pktCount == 0) {
-
             return 0;
-
         }
 
         int earliestLevel = findearliestpacket(DEFAULT_VOLUME);
-
-
 
         if (earliestLevel == 0) {
 
@@ -441,8 +344,9 @@ namespace ns3 {
             GearboxPktTag tag;
 
             fifoitem->GetPacket()->PeekPacketTag(tag);
-
+	    
             this->setCurrentRound(tag.GetDepartureRound());
+	    cout << "GB L0 df depRound:" << tag.GetDepartureRound() << endl;
 
             Ptr<QueueDiscItem> p = fifoitem;
 
@@ -461,6 +365,7 @@ namespace ns3 {
             pifoitem->GetPacket()->PeekPacketTag(tag);
 
             this->setCurrentRound(tag.GetDepartureRound());
+	    cout << "GB L" << earliestLevel << " dp depRound:" << tag.GetDepartureRound() << endl;
 
             Ptr<QueueDiscItem> p = pifoitem;
 

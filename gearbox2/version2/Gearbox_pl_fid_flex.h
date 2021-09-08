@@ -232,8 +232,6 @@ namespace ns3 {
 
         int cal_insert_level(int, int);
 
-        void PrintSomething(const std::string& strInput, const int& nInput);
-
         // Packet* serveCycle();
 
         // vector<Packet> serveUpperLevel(int &, int);
