@@ -240,7 +240,7 @@ namespace ns3 {
         Ptr<QueueDiscItem> item = pifo.Pop();
 	GearboxPktTag tag;
 	GetPointer(item)->GetPacket()->PeekPacketTag(tag);
-	cout << " pifodeque departureRound:" << tag.GetDepartureRound() << endl;
+	cout << " pifoDeque departureRound:" << tag.GetDepartureRound() << endl;
 
         ifLowerThanLthenReload();
 
@@ -253,18 +253,17 @@ namespace ns3 {
 
 
     void Level_flex::ifLowerThanLthenReload() {
-	int k = 0;
-        while (pifo.Size() < pifo.LowestSize() && k < SPEEDUP_FACTOR) {
+	//int k = 0;
+        while (pifo.Size() < pifo.LowestSize()) { // && k < SPEEDUP_FACTOR
             int earliestFifo = getEarliestFifo();
             if (earliestFifo == -1) {
                 break;
             }
             //setCurrentIndex(earliestFifo);
-
-	    for (int i = 0; i < getCurrentFifoNPackets() ; i++){
-		cout << "ifLowReload i=" << i << endl;          
+	    int npkts = getFifoNPackets(earliestFifo);
+	    for (int i = 0; i < npkts; i++){        
 		pifoEnque(fifoDeque(earliestFifo));// don't change the current index
-		k++;
+		//k++;
      	    }
         }
 
@@ -273,9 +272,10 @@ namespace ns3 {
 
 
     int Level_flex::getEarliestFifo() {
-        for (int i = 1; i < volume; i++) {
-            if (!fifos[(i + currentIndex) % 8]->IsEmpty()) {//start from currentindex+1? or from earliestfifo+1?
-                return (i + currentIndex) % 8;
+	cout << "currentIndex:" << currentIndex << endl;
+        for (int i = 1; i < DEFAULT_VOLUME; i++) {
+            if (!fifos[(i + currentIndex) % DEFAULT_VOLUME]->IsEmpty()) {//start from currentindex+1? or from earliestfifo+1?
+                return (i + currentIndex) % DEFAULT_VOLUME;
             }
         }
         return -1; // return -1 if all fifos are empty
@@ -286,21 +286,18 @@ namespace ns3 {
 
 
     const QueueItem* Level_flex::fifopeek() {
-        //currentIndex = getEarliestFifo();
-        /*if (currentIndex == -1){
-	    currentIndex = 0; // start to serve next level's fifos
-            return 0;
-	}*/
-	int earliestFifo;
 	Ptr<const QueueItem> item;
 	if (isCurrentFifoEmpty()) {
-	    earliestFifo = getEarliestFifo();
-	    item = fifos[earliestFifo]->Peek();
-            return GetPointer(item);
-        }
-        item = fifos[currentIndex]->Peek();
-        return GetPointer(item);
-
+	    currentIndex = getEarliestFifo();
+	    if (currentIndex == -1){
+		currentIndex = 0;
+		return NULL;
+	    }
+	    cout << " empty currentIndex:" << currentIndex << endl;
+	}
+	cout << " currentIndex:" << currentIndex << endl;
+	item = fifos[currentIndex]->Peek();
+	return GetPointer(item);
     }
 
 
@@ -359,7 +356,11 @@ namespace ns3 {
     }
 
     int Level_flex::getCurrentFifoNPackets() {
-	return fifos[currentIndex]->GetNPackets();
+	return getFifoNPackets(currentIndex);
+    }
+ 
+    int Level_flex::getFifoNPackets(int index) {
+	return fifos[index]->GetNPackets();
     }
 
     int Level_flex::size() {

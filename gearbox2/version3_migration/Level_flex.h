@@ -109,6 +109,7 @@ namespace ns3 {
         int getCurrentFifoSize();
 	
 	int getCurrentFifoNPackets();
+	int getFifoNPackets(int index);
 
         bool isCurrentFifoEmpty();
 

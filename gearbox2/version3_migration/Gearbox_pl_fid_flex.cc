@@ -114,7 +114,7 @@ namespace ns3 {
 		GearboxPktTag tag;
 		packet->PeekPacketTag(tag);
 		int departureRound = tag.GetDepartureRound();
-		cout << "--2--depRound:" << departureRound << " tag_min:" << tag_min << endl;
+		cout << "earliest depRound:" << departureRound << " tag_min:" << tag_min << endl;
 		if (departureRound <= tag_min) { //deque level0 first?
 		    //cout << "departureRound is "<< departureRound<<endl;
 		    tag_min = departureRound;
@@ -136,8 +136,6 @@ namespace ns3 {
 
 
     void Gearbox_pl_fid_flex::setPktCount(int pktCount) {
-
-        ///fprintf(stderr, "Set Packet Count: %d\n", pktCount); // Debug: Peixuan 07072019
 
         this->pktCount = pktCount;
 
@@ -344,16 +342,16 @@ namespace ns3 {
 
 	int earliestLevel = findearliestpacket(DEFAULT_VOLUME);
 
-
+	cout << "earliestLevel:" << earliestLevel;
 
 	if(earliestLevel == 0){
-
+		cout << " FifoDequeue" << endl;
 		return FifoDequeue(0);
 
 	}
 
 	else{
-
+		cout << " PifoDequeue" << endl;
 		return PifoDequeue(earliestLevel);
 
 	}
@@ -384,7 +382,7 @@ namespace ns3 {
 	Ptr<QueueDiscItem> p = fifoitem;
 
 	setPktCount(pktCount - 1);
-	this->Migration(currentRound);
+	//this->Migration(currentRound);
 
 	return p;
 
@@ -397,6 +395,8 @@ namespace ns3 {
    Ptr<QueueDiscItem> Gearbox_pl_fid_flex::PifoDequeue(int earliestLevel) {
 
    	QueueDiscItem* pifoitem = levels[earliestLevel].pifoDeque();
+	
+	cout << "dequeddddddddd" << endl;
 
 	GearboxPktTag tag;
 
@@ -407,6 +407,7 @@ namespace ns3 {
 	Ptr<QueueDiscItem> p = pifoitem;
 
 	setPktCount(pktCount - 1);
+	
 	this->Migration(currentRound);
 
 	return p;
@@ -423,7 +424,7 @@ namespace ns3 {
 
 	int i = 0;
 	//level 1
-	cout<<"Migration"<<endl;
+	cout << "MigrationMigration " << currentRound << endl;
 	int level1_currentFifo = currentRound / FIFO_PER_LEVEL % FIFO_PER_LEVEL;
 	levels[1].setCurrentIndex(level1_currentFifo);	
 	while(!levels[1].isCurrentFifoEmpty() && (i < SPEEDUP_FACTOR)){
