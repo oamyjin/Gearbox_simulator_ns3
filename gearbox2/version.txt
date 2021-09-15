@@ -1,3 +1,11 @@
-version2: reload (reload all the pkts in the pifo (todo:reload K pkts))
+version1: enque + deque
 
-version3: reload + migration (migrate K pkts)
+version2: reload (entire fifo)
+
+version3: reload (entire fifo) + migration (step by step with speed up)
+
+version4: reload (entire fifo) + migration (direct with speed up)
+
+version5: reload (speed up) + migration (direct with speed up)
+
+
