@@ -4,8 +4,10 @@ version2: reload (entire fifo)
 
 version3: reload (entire fifo) + migration (step by step with speed up)
 
-version4: reload (entire fifo) + migration (direct with speed up)
+version3.1: migration (direct with speed up)
 
-version5: reload (speed up) + migration (direct with speed up)
+version3.2: reload (speed up)
+
+version4: reload (speed up) +migration (direct with speed up) + overflow(move to higher fifo)
 
 
