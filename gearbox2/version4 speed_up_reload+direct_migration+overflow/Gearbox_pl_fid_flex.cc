@@ -192,10 +192,10 @@ namespace ns3 {
 
         Flow_pl* currFlow = flowMap[key];       
 	// update insert level 
-	int insertLevel = 0;// = hasTag == 0 ? currFlow->getInsertLevel() : 0;
-	if (hasTag == 0){
-		insertLevel = currFlow->getInsertLevel();
-	}
+	//int insertLevel = 0;// = hasTag == 0 ? currFlow->getInsertLevel() : 0;
+	//if (hasTag == 0){
+		int insertLevel = currFlow->getInsertLevel();
+	//}
 	cout << "insertLevel:" << insertLevel << endl;
         departureRound = max(departureRound, currentRound);
 
@@ -220,58 +220,66 @@ namespace ns3 {
         this->updateFlowPtr(flowlabel, currFlow);  // Peixuan 04212020 fid
 
 	bool result;
-        // LEVEL_2
+
 	cout << "departureRound:" << departureRound << " currentRound:" << currentRound << " insertLevel:" << insertLevel << endl;
-        if (departureRound - currentRound >= (FIFO_PER_LEVEL * FIFO_PER_LEVEL) || insertLevel == 2) {
-            currFlow->setInsertLevel(2);
-            this->updateFlowPtr(flowlabel, currFlow);  // Peixuan 04212020 fid
-	    if(hasTag == 0){
-		// Add Pkt Tag
-	        packet->AddPacketTag(GearboxPktTag(departureRound, departureRound / (FIFO_PER_LEVEL * FIFO_PER_LEVEL) % FIFO_PER_LEVEL));
-	    	cout << "GB L2 NEW ENQUE departureRound:" << departureRound  << " currentRound:" << currentRound << " index:" << departureRound / (FIFO_PER_LEVEL * FIFO_PER_LEVEL) % FIFO_PER_LEVEL << endl;
-	    }
-	    else if(hasTag == 1){
-		cout << "GB L2 ENQUE departureRound:" << departureRound  << " currentRound:" << currentRound << " index:" << departureRound / (FIFO_PER_LEVEL * FIFO_PER_LEVEL) % FIFO_PER_LEVEL << endl;
-		// Update Pkt Tag
-		tag.SetIndex(departureRound / (FIFO_PER_LEVEL * FIFO_PER_LEVEL) % FIFO_PER_LEVEL);
-	    }
-            //levels[2].enque(GetPointer(item), departureRound / (FIFO_PER_LEVEL * FIFO_PER_LEVEL) % FIFO_PER_LEVEL, 1);
-            result = PifoEnqueue(2, GetPointer(item));
-        }
- 	// LEVEL_1
-        else if (departureRound - currentRound >= FIFO_PER_LEVEL || insertLevel == 1) {
-            this->updateFlowPtr(flowlabel, currFlow);  // Peixuan 04212020 fid
-	    if(hasTag == 0){
-    	        // Add Pkt Tag
-                packet->AddPacketTag(GearboxPktTag(departureRound, departureRound / FIFO_PER_LEVEL % FIFO_PER_LEVEL));
-                currFlow->setInsertLevel(1);
-	        cout << "GB L1 NEW ENQUE departureRound:" << departureRound << " currentRound:" << currentRound << endl;
-	    }
-	    else if(hasTag == 1){
-		cout << "GB L1 ENQUE departureRound:" << departureRound  << " currentRound:" << currentRound << " index:" << departureRound / (FIFO_PER_LEVEL * FIFO_PER_LEVEL) % FIFO_PER_LEVEL << endl;
-		// Update Pkt Tag
-		tag.SetIndex(departureRound / FIFO_PER_LEVEL % FIFO_PER_LEVEL);
-	    }
-            //levels[1].enque(GetPointer(item), departureRound / FIFO_PER_LEVEL % FIFO_PER_LEVEL, 1);
-	    result = PifoEnqueue(1, GetPointer(item));
-        }
-	// LEVEL_0
-        else {
-            currFlow->setInsertLevel(0);
-            this->updateFlowPtr(flowlabel, currFlow);  // Peixuan 04212020 fid
-	    if(hasTag == 0){
-    	        // Add Pkt Tag
-                packet->AddPacketTag(GearboxPktTag(departureRound, departureRound % FIFO_PER_LEVEL));
-	        cout << "GB L0 NEW ENQUE departureRound:" << departureRound << " currentRound:" << currentRound << " index:" << departureRound % FIFO_PER_LEVEL << endl;
-	    }
-	    else if(hasTag == 1){
-		cout << "GB L0 ENQUE departureRound:" << departureRound  << " currentRound:" << currentRound << " index:" << departureRound / (FIFO_PER_LEVEL * FIFO_PER_LEVEL) % FIFO_PER_LEVEL << endl;
-		// Update Pkt Tag
-		tag.SetIndex(departureRound % FIFO_PER_LEVEL);
-	    }
-            //levels[0].enque(GetPointer(item), departureRound % FIFO_PER_LEVEL, 0);
-	    result = FifoEnqueue(GetPointer(item), departureRound % FIFO_PER_LEVEL);
-        }
+
+
+	if(hasTag == 0){
+		//level 2
+		if (departureRound - currentRound >= (FIFO_PER_LEVEL * FIFO_PER_LEVEL || insertLevel == 2)){
+			currFlow->setInsertLevel(2);
+
+            		this->updateFlowPtr(flowlabel, currFlow);  // Peixuan 04212020 fid
+			// Add Pkt Tag
+
+	        	packet->AddPacketTag(GearboxPktTag(departureRound, departureRound / (FIFO_PER_LEVEL * FIFO_PER_LEVEL) % FIFO_PER_LEVEL));
+
+	    		cout << "GB L2 NEW ENQUE departureRound:" << departureRound  << " currentRound:" << currentRound << " index:" << departureRound / (FIFO_PER_LEVEL * FIFO_PER_LEVEL) % FIFO_PER_LEVEL << endl;
+			result = PifoEnqueue(2, GetPointer(item));
+		}
+		//level 1
+		else if (departureRound - currentRound >= (FIFO_PER_LEVEL || insertLevel == 1)){
+			currFlow->setInsertLevel(1);
+
+            		this->updateFlowPtr(flowlabel, currFlow);  // Peixuan 04212020 fid
+			// Add Pkt Tag
+
+	        	packet->AddPacketTag(GearboxPktTag(departureRound, departureRound / FIFO_PER_LEVEL % FIFO_PER_LEVEL));
+
+	    		cout << "GB L1 NEW ENQUE departureRound:" << departureRound  << " currentRound:" << currentRound << " index:" << departureRound / FIFO_PER_LEVEL % FIFO_PER_LEVEL << endl;
+			result = PifoEnqueue(1, GetPointer(item));
+		}
+		//level 0
+		else{
+			currFlow->setInsertLevel(0);
+
+            		this->updateFlowPtr(flowlabel, currFlow);
+			packet->AddPacketTag(GearboxPktTag(departureRound, departureRound % FIFO_PER_LEVEL));
+	
+	        	cout << "GB L2 NEW ENQUE departureRound:" << departureRound << " currentRound:" << currentRound << " index:" << departureRound % FIFO_PER_LEVEL << endl;
+			result = FifoEnqueue(GetPointer(item), departureRound % FIFO_PER_LEVEL);
+		}
+	}
+	else{
+		//level 2
+		if (departureRound - currentRound >= (FIFO_PER_LEVEL * FIFO_PER_LEVEL)){
+			// Update Pkt Tag
+
+			tag.SetIndex(departureRound / (FIFO_PER_LEVEL * FIFO_PER_LEVEL) % FIFO_PER_LEVEL);
+			result = PifoEnqueue(2, GetPointer(item));
+		}
+		//level 1
+		else if (departureRound - currentRound >= FIFO_PER_LEVEL){
+			tag.SetIndex(departureRound / FIFO_PER_LEVEL % FIFO_PER_LEVEL);
+			result = PifoEnqueue(1, GetPointer(item));
+		}
+		//level 0
+		else{
+			tag.SetIndex(departureRound % FIFO_PER_LEVEL);
+			result = FifoEnqueue(GetPointer(item), departureRound % FIFO_PER_LEVEL);
+		}
+	}
+
 	if (result == true){
             setPktCount(pktCount + 1);
 	    cout << "ENQUEUED" << endl;
@@ -282,6 +290,9 @@ namespace ns3 {
 	    return false;
 	}
     }
+
+
+
 
     bool Gearbox_pl_fid_flex::PifoEnqueue(int level, QueueDiscItem* item){
  	QueueDiscItem* re = levels[level].pifoEnque(item);
