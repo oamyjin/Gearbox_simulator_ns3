@@ -46,7 +46,7 @@ namespace ns3 {
 
         static const int DEFAULT_VOLUME = 3;
 
-        static const int FIFO_PER_LEVEL = 10;         // 01212020 Peixuan flex level
+        static const int FIFO_PER_LEVEL = 8;         // 01212020 Peixuan flex level
 
         static const int DEFAULT_WEIGHT = 2;         // 01032019 Peixuan default weight
 
@@ -72,45 +72,11 @@ namespace ns3 {
 
 
 
-
-
         Level_flex levels[3];
 
-        Level_flex levelsB[2];       // Back up Levels
+	bool isMigration; // set to TRUE during migration
 
 
-
-        //Level_flex forthLevel;
-
-        //Level_flex thirdLevel;
-
-
-
-        Level_flex hundredLevel;
-
-        Level_flex decadeLevel;
-
-
-
-        //Level_flex thirdLevelB;    // Back up Level_flexs
-
-        //Level_flex hundredLevelB;    // Back up Level_flexs
-
-        Level_flex decadeLevelB;     // Back up Levels
-
-
-
-        bool level0ServingB;          // is serve Back up Levels
-
-        bool level1ServingB;          // is serve Back up Levels
-
-
-
-        //bool level2ServingB;          // is serve Back up Levels
-
-        //bool level3ServingB;          // is serve Back up Levels
-
-        //bool level4ServingB;          // is serve Back up Levels
 
 
 
@@ -205,6 +171,10 @@ namespace ns3 {
 
         bool DoEnqueue(Ptr<QueueDiscItem> item);
 
+	bool PifoEnqueue(int level, QueueDiscItem* item);
+
+	bool FifoEnqueue(QueueDiscItem* item, int index);
+
         Ptr<QueueDiscItem> DoDequeue(void);
 
  	Ptr<QueueDiscItem> FifoDequeue(int);
@@ -230,6 +200,11 @@ namespace ns3 {
         int cal_theory_departure_round(Ipv4Header, int);
 
         int cal_insert_level(int, int);
+	
+	/*
+	   calculate the index according to the pkt's departureRound and the level
+	*/
+	int cal_index(int, int);
 
         // Packet* serveCycle();
 
@@ -252,6 +227,8 @@ namespace ns3 {
 
 
         int findearliestpacket(int volume);
+	
+	void ifLowerThanLthenReload(int level);
 
 
 
