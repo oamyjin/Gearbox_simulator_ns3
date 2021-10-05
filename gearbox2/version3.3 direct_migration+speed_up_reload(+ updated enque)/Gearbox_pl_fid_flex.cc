@@ -1,3 +1,4 @@
+#include<stdio.h>
 #include "ns3/Level_flex.h"
 
 #include "ns3/Flow_pl.h"
@@ -5,6 +6,8 @@
 #include <cmath>
 
 #include <sstream>
+#include <iostream>
+#include <string> 
 
 #include <vector>
 
@@ -185,7 +188,8 @@ namespace ns3 {
            currFlow->setLastFinishRound(departureRound + int(curWeight));    // 07102019 Peixuan: only update last packet finish time if the packet wasn't dropped
            this->updateFlowPtr(flowlabel, currFlow);  // Peixuan 04212020 fid
 
-           if ((departureRound / (FIFO_PER_LEVEL * FIFO_PER_LEVEL) - currentRound / (FIFO_PER_LEVEL * FIFO_PER_LEVEL)) >= FIFO_PER_LEVEL) {
+           //if ((departureRound / (FIFO_PER_LEVEL * FIFO_PER_LEVEL) - currentRound / (FIFO_PER_LEVEL * FIFO_PER_LEVEL)) >= FIFO_PER_LEVEL) {
+	   if (departureRound - currentRound > FIFO_PER_LEVEL * FIFO_PER_LEVEL * FIFO_PER_LEVEL){
 	      cout << " DROP!!! TOO LARGE DEPARTURE_ROUND!  departureRound:"  << departureRound << " currentRound:" << currentRound << endl;
               Drop(item);
               return false;   // 07072019 Peixuan: exceeds the maximum round
@@ -210,7 +214,7 @@ namespace ns3 {
             		this->updateFlowPtr(flowlabel, currFlow);  // Peixuan 04212020 fid
 			// Add Pkt Tag
 
-	        	packet->AddPacketTag(GearboxPktTag(departureRound, departureRound / (FIFO_PER_LEVEL * FIFO_PER_LEVEL) % FIFO_PER_LEVEL));
+	        	GetPointer(GetPointer(item)->GetPacket())->AddPacketTag(GearboxPktTag(departureRound, departureRound / (FIFO_PER_LEVEL * FIFO_PER_LEVEL) % FIFO_PER_LEVEL));
 
 	    		cout << "GB L2 NEW ENQUE departureRound:" << departureRound  << " currentRound:" << currentRound << " index:" << departureRound / (FIFO_PER_LEVEL * FIFO_PER_LEVEL) % FIFO_PER_LEVEL << endl;
 			result = PifoEnqueue(2, GetPointer(item));
@@ -222,7 +226,7 @@ namespace ns3 {
             		this->updateFlowPtr(flowlabel, currFlow);  // Peixuan 04212020 fid
 			// Add Pkt Tag
 
-	        	packet->AddPacketTag(GearboxPktTag(departureRound, departureRound / FIFO_PER_LEVEL % FIFO_PER_LEVEL));
+	        	GetPointer(GetPointer(item)->GetPacket())->AddPacketTag(GearboxPktTag(departureRound, departureRound / FIFO_PER_LEVEL % FIFO_PER_LEVEL));
 
 	    		cout << "GB L1 NEW ENQUE departureRound:" << departureRound  << " currentRound:" << currentRound << " index:" << departureRound / FIFO_PER_LEVEL % FIFO_PER_LEVEL << endl;
 			result = PifoEnqueue(1, GetPointer(item));
@@ -232,7 +236,7 @@ namespace ns3 {
 			currFlow->setInsertLevel(0);
 
             		this->updateFlowPtr(flowlabel, currFlow);
-			packet->AddPacketTag(GearboxPktTag(departureRound, departureRound % FIFO_PER_LEVEL));
+			GetPointer(GetPointer(item)->GetPacket())->AddPacketTag(GearboxPktTag(departureRound, departureRound % FIFO_PER_LEVEL));
 	
 	        	cout << "GB L2 NEW ENQUE departureRound:" << departureRound << " currentRound:" << currentRound << " index:" << departureRound % FIFO_PER_LEVEL << endl;
 			result = FifoEnqueue(GetPointer(item), departureRound % FIFO_PER_LEVEL);
@@ -244,22 +248,28 @@ namespace ns3 {
 			// Update Pkt Tag
 			cout << "L2" << endl;
 			tag.SetIndex(departureRound / (FIFO_PER_LEVEL * FIFO_PER_LEVEL) % FIFO_PER_LEVEL);
+			GetPointer(item)->GetPacket()->ReplacePacketTag(tag);
 			result = PifoEnqueue(2, GetPointer(item));
 		}
 		//level 1
 		else if (departureRound - currentRound >= FIFO_PER_LEVEL){
 			cout << "L1" << endl;
 			tag.SetIndex(departureRound / FIFO_PER_LEVEL % FIFO_PER_LEVEL);
+			GetPointer(item)->GetPacket()->ReplacePacketTag(tag);
 			result = PifoEnqueue(1, GetPointer(item));
 		}
 		//level 0
 		else{
 			cout << "L0" << endl;
 			tag.SetIndex(departureRound % FIFO_PER_LEVEL);
+			GetPointer(item)->GetPacket()->ReplacePacketTag(tag);
 			result = FifoEnqueue(GetPointer(item), departureRound % FIFO_PER_LEVEL);
 		}
 	}
-
+	
+	// record to file
+	Record("EnqueuedPktsList", departureRound);
+	
 	if (result == true){
             setPktCount(pktCount + 1);
 	    cout << "ENQUEUED" << endl;
@@ -352,7 +362,6 @@ namespace ns3 {
         int curStartRound = max(currentRound, curLastFinishRound);//curLastDepartureRound should be curLastFinishRound
         //int curFinishRound = curStarRound + curWeight;
         int curDepartureRound = (int)(curStartRound);
-	cout << "curLastFinishRound:" << curLastFinishRound << " currentRound:" << currentRound << " curStartRound:" << curStartRound << curDepartureRound << endl;
         return curDepartureRound;
     }
 
@@ -361,19 +370,73 @@ namespace ns3 {
         if (pktCount == 0) {
             return 0;
         }
-	cout << endl;
+	cout << endl << endl;
 	int earliestLevel = findearliestpacket(DEFAULT_VOLUME);
+	Ptr<QueueDiscItem> re = NULL;
 	cout << "GB earliestLevel:" << earliestLevel;
 	if(earliestLevel == 0){
 		cout << " FifoDequeue" << endl;
-		return FifoDequeue(0);
+		re = FifoDequeue(0);
 	}
 	else{
 		cout << " PifoDequeue" << endl;
-		return PifoDequeue(earliestLevel);
+		re = PifoDequeue(earliestLevel);
 	}
+	
+	// get dequeued pkt's tag
+	GearboxPktTag tag;
+        re->GetPacket()->PeekPacketTag(tag);
+        int departureRound = tag.GetDepartureRound();
+	// record to file
+	Record("DequeuedPktsList", departureRound);
+
+	return re;
    }
 
+   void Gearbox_pl_fid_flex::Record(string fname, int departureRound){
+	string path = "UDPResult/pktsList/";
+	path.append(fname);
+
+	FILE *fp;
+	fp = fopen(path.data(), "a+"); //open and write
+	fprintf(fp, "%d", departureRound);
+	fprintf(fp, "\t");
+	fclose(fp);
+	FILE *fp2;
+	fp2 = fopen("UDPResult/pktsList/LevelsSize", "a+"); //open and write
+	fprintf(fp2, "%s", "vt:");
+	fprintf(fp2, "%d", currentRound);
+	fprintf(fp2, "\t%s", "L0 fifos:");
+	fprintf(fp2, "%d", levels[0].getFifoTotalNPackets());
+	fprintf(fp2, "%s", "\t\t");
+	fprintf(fp2, "%s", "L1 fifos:");
+	fprintf(fp2, "%d", levels[1].getFifoTotalNPackets());
+	fprintf(fp2, "%s", " fifo[0]:");
+	fprintf(fp2, "%d", levels[1].getFifoNPackets(0));
+	fprintf(fp2, "%s", " fifo[1]:");
+	fprintf(fp2, "%d", levels[1].getFifoNPackets(1));
+	fprintf(fp2, "%s", " fifo[2]:");
+	fprintf(fp2, "%d", levels[1].getFifoNPackets(2));
+	fprintf(fp2, "%s", " pifo:");
+	fprintf(fp2, "%d", levels[1].getPifoSize());
+	fprintf(fp2, "%s", "\t\t");
+	fprintf(fp2, "%s", "L2 fifos:");
+	fprintf(fp2, "%d", levels[2].getFifoTotalNPackets());
+	fprintf(fp2, "%s", " fifo[0]:");
+	fprintf(fp2, "%d", levels[2].getFifoNPackets(0));
+	fprintf(fp2, "%s", " fifo[1]:");
+	fprintf(fp2, "%d", levels[2].getFifoNPackets(1));
+	fprintf(fp2, "%s", " fifo[2]:");
+	fprintf(fp2, "%d", levels[2].getFifoNPackets(2));
+	fprintf(fp2, "%s", " pifo:");
+	fprintf(fp2, "%d", levels[2].getPifoSize());
+	fprintf(fp2, "%s", "\t\t");
+	fprintf(fp2, "%s", "GB total:");
+	fprintf(fp2, "%d", levels[0].getFifoTotalNPackets() + levels[1].getFifoTotalNPackets() + levels[1].getPifoSize() + levels[2].getFifoTotalNPackets() + levels[2].getPifoSize());
+	fprintf(fp2, "\t%s", fname.data());
+	fprintf(fp2, "\n");
+	fclose(fp2);
+   }
 
    Ptr<QueueDiscItem> Gearbox_pl_fid_flex::FifoDequeue(int earliestLevel) {
 	QueueDiscItem* fifoitem;
@@ -651,6 +714,6 @@ namespace ns3 {
 
     }
 
-
+    
 
 }

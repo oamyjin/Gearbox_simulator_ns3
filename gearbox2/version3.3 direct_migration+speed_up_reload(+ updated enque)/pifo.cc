@@ -43,7 +43,6 @@ namespace ns3 {
 		// insert into the list directly if empty
 		QueueDiscItem* re = NULL;
 		cout << "PIFO list.size():" << list.size();
-		cout << " h re:" << re << endl;	
 		if (list.size() == 0) {
 			list.push_back(item);
 			UpdateMaxValue();
@@ -69,7 +68,6 @@ namespace ns3 {
 			}
 			// return the last item if pifo's size exceeds H_value, else return 0	
 			cout << "int(list.size()):" << int(list.size()) << " this->H_value:" << this->H_value << endl;
-			cout << "hh re:" << re << endl;	
 			if (int(list.size()) > this->H_value) {
 				cout << "in " << endl;
 				re = list.at(list.size() - 1);
@@ -79,7 +77,6 @@ namespace ns3 {
 				GearboxPktTag tag2;
 				re->GetPacket()->PeekPacketTag(tag2);
 				cout << " re.dp:" << tag2.GetDepartureRound() << endl;
-				cout << "here is re " << re << endl;
 				list.pop_back();
 			}
 			UpdateMaxValue();

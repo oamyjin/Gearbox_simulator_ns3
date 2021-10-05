@@ -231,6 +231,9 @@ namespace ns3 {
 	void ifLowerThanLthenReload(int level);
 
 
+	void Record(string fname, int departureRound);
+
+
 
     };
 

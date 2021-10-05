@@ -36,7 +36,7 @@ namespace ns3 {
 
         static const int DEFAULT_FIFO_N_SIZE = 1000;
 
-	static const int SPEEDUP_FACTOR = 5;
+	static const int SPEEDUP_FACTOR = 10;
 
         int volume;                         // num of fifos in one level
 
@@ -109,6 +109,7 @@ namespace ns3 {
 	
 	int getCurrentFifoNPackets();
 	int getFifoNPackets(int index);
+	int getFifoTotalNPackets();
 
         bool isCurrentFifoEmpty();
 
@@ -120,6 +121,7 @@ namespace ns3 {
 
 
         int getPifoMaxValue(void); // the max tag in the pifo
+        int getPifoSize(void); // pkt counts in the pifo
 
 	void pifoPrint();
  	
