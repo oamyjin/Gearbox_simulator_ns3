@@ -1,4 +1,3 @@
-
 #include "ns3/Level_flex.h"
 
 #include "ns3/Flow_pl.h"
@@ -22,6 +21,7 @@
 #include "ns3/ppp-header.h"
 
 #include "ns3/ipv6-header.h"
+#include "ns3/tcp-header.h"
 
 #include "ns3/ptr.h"
 
@@ -220,12 +220,14 @@ namespace ns3 {
 	Ptr<const Ipv4QueueDiscItem> ipItem = DynamicCast<const Ipv4QueueDiscItem>(item);
 
 	const Ipv4Header ipHeader = ipItem->GetHeader();
+	TcpHeader header;
+    	GetPointer(item)->GetPacket()->PeekHeader(header);
 
 	cout<<"source:"<<ipHeader.GetSource();
 
 	cout<<" destination:"<<ipHeader.GetDestination();
 
-	uint64_t flowLabel = uint64_t(ipHeader.GetSource ().Get ()) << 32 | uint64_t (ipHeader.GetDestination ().Get ());
+	uint64_t flowLabel =  uint64_t(ipHeader.GetSource ().Get ()) << 32 | uint16_t (header.GetSourcePort())<< 16 | uint16_t (header.GetDestinationPort());
 
 	
 
@@ -408,6 +410,7 @@ namespace ns3 {
 	        	packet->AddPacketTag(GearboxPktTag(departureRound, departureRound / (FIFO_PER_LEVEL * FIFO_PER_LEVEL) % FIFO_PER_LEVEL, time2));
 
 			packet->PeekPacketTag(tag);
+			//item->SetTimeStamp(Simulator::Now());
 
 			cout<<"The storage destination is:"<<endl;			
 
@@ -434,6 +437,7 @@ namespace ns3 {
 	        	packet->AddPacketTag(GearboxPktTag(departureRound, departureRound / FIFO_PER_LEVEL % FIFO_PER_LEVEL, time2));
 
 			packet->PeekPacketTag(tag);
+			//item->SetTimeStamp(Simulator::Now());
 
 			cout<<"The destination to be stored is:"<<endl;
 
@@ -458,6 +462,7 @@ namespace ns3 {
 			packet->AddPacketTag(GearboxPktTag(departureRound, departureRound % FIFO_PER_LEVEL, time2));
 
 			packet->PeekPacketTag(tag);
+			//item->SetTimeStamp(Simulator::Now());
 
 			cout<<"The destination to be stored is:"<<endl;
 
@@ -549,6 +554,11 @@ namespace ns3 {
 
 	Record("EnqueuedPktsList", departureRound);
 
+	
+
+	
+
+
 	if (result == true){
 
 	    if(hasTag==0){
@@ -556,6 +566,21 @@ namespace ns3 {
 		 setPktCount(pktCount + 1);
 
 		 cum_pktCount += 1;
+		string path = "GBResult/pktsList/";
+
+		path.append("uid");
+
+		FILE *fp;
+
+		cout<<path<<endl;
+
+		fp = fopen(path.data(), "a+"); //open and write
+
+		fprintf(fp, "%lu", item->GetPacket()->GetUid());
+
+		fprintf(fp, "\t");
+
+		fclose(fp);
 
 	    }
 
@@ -917,6 +942,11 @@ namespace ns3 {
 
 	packet->ReplacePacketTag(tag);
 
+	//Time enquetime = re->GetTimeStamp();
+	//double queuing_delay = Simulator::Now().GetSeconds() - enquetime.GetSeconds();
+	//Time queuing = FromDouble(queuing_delay,s);
+	//re->SetTimeStamp();
+
 
 
 	int departureround = tag.GetDepartureRound();
@@ -924,6 +954,7 @@ namespace ns3 {
 	Record("DequeuedPktsList", departureround);
 
 	PacketRecord("DequeuedPktsList", departureround, re);
+	
 
 	cout <<"Gearbox DoDequeue<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<End"<<endl;
 
@@ -986,18 +1017,6 @@ namespace ns3 {
 		fprintf(fp2, "%s", "L1 fifos:");
 
 		fprintf(fp2, "%d", levels[1].getFifoTotalNPackets());
-
-		/*fprintf(fp2, "%s", " fifo[0]:");
-
-		fprintf(fp2, "%d", levels[1].getFifoNPackets(0));
-
-		fprintf(fp2, "%s", " fifo[1]:");
-
-		fprintf(fp2, "%d", levels[1].getFifoNPackets(1));
-
-		fprintf(fp2, "%s", " fifo[2]:");
-
-		fprintf(fp2, "%d", levels[1].getFifoNPackets(2));*/
 
 		fprintf(fp2, "%s", " pifo:");
 
@@ -1129,8 +1148,6 @@ namespace ns3 {
 
 
 
-
-
     void Gearbox_pl_fid_flex::PacketRecord(string fname, int departureRound, Ptr<QueueDiscItem> item){
 
 		//get pkt information
@@ -1213,7 +1230,9 @@ namespace ns3 {
 
 		fprintf(fp2, "%d", departureRound);
 
-
+		fprintf(fp2, "\t%s", "uid:");
+		fprintf(fp2, "%lu", item->GetPacket()->GetUid());
+                
 
 		fprintf(fp2, "\t%s", "fifoenque:");
 
