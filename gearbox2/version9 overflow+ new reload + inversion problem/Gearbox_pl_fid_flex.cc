@@ -686,7 +686,7 @@ namespace ns3 {
 
 	if(hasTag == 0){
 
-
+		uid = uid +1;
 
 		//cout<<"The pkt is new."<<endl;
 
@@ -704,7 +704,7 @@ namespace ns3 {
 
 
 
-
+		
 
 
 
@@ -714,7 +714,7 @@ namespace ns3 {
 
 	   	departureRound = RankComputation(GetPointer(item), currFlow);
 
-
+		RecordFlow(flowlabel,departureRound);
 
 
 
@@ -816,7 +816,7 @@ namespace ns3 {
 
 
 
-	        	packet->AddPacketTag(GearboxPktTag(departureRound, departureRound / (FIFO_PER_LEVEL * FIFO_PER_LEVEL) % FIFO_PER_LEVEL, time2));
+	        	packet->AddPacketTag(GearboxPktTag(departureRound, departureRound / (FIFO_PER_LEVEL * FIFO_PER_LEVEL) % FIFO_PER_LEVEL, time2,uid));
 
 
 
@@ -870,7 +870,7 @@ namespace ns3 {
 
 
 
-	        	packet->AddPacketTag(GearboxPktTag(departureRound, departureRound / FIFO_PER_LEVEL % FIFO_PER_LEVEL, time2));
+	        	packet->AddPacketTag(GearboxPktTag(departureRound, departureRound / FIFO_PER_LEVEL % FIFO_PER_LEVEL, time2,uid));
 
 
 
@@ -920,7 +920,7 @@ namespace ns3 {
 
 
 
-			packet->AddPacketTag(GearboxPktTag(departureRound, departureRound % FIFO_PER_LEVEL, time2));
+			packet->AddPacketTag(GearboxPktTag(departureRound, departureRound % FIFO_PER_LEVEL, time2,uid));
 
 
 
@@ -1106,14 +1106,6 @@ namespace ns3 {
 
 
 
-	Record("EnqueuedPktsList.txt", departureRound);
-
-
-
-	
-
-
-
 	
 
 
@@ -1125,6 +1117,7 @@ namespace ns3 {
 
 
 	    if(hasTag==0){
+		Record("EnqueuedPktsList.txt", departureRound,item);
 
 
 
@@ -1154,7 +1147,7 @@ namespace ns3 {
 
 
 
-		fprintf(fp, "%lu", item->GetPacket()->GetUid());
+		fprintf(fp, "%d", tag.GetUid());
 
 
 
@@ -1182,7 +1175,7 @@ namespace ns3 {
 
 
 
-            NS_LOG_INFO("At time " << Simulator::Now().GetSeconds() << " Enque " << packet << " Pkt:" << packet->GetUid());
+            NS_LOG_INFO("At time " << Simulator::Now().GetSeconds() << " Enque " << packet);
 
 
 
@@ -1256,13 +1249,15 @@ namespace ns3 {
 
 	//cout<<"????????????gearbox pifoenque "<<tag.GetPifoenque()<<endl;
 
-
+	
 
 
 
 
 
  	QueueDiscItem* re = levels[level].pifoEnque(item);
+
+	
 
 
 
@@ -1323,10 +1318,6 @@ namespace ns3 {
 
 
 		}
-
-
-
-		level = level + 1;
 
 
 
@@ -1434,7 +1425,7 @@ namespace ns3 {
 
 
 
-			re = levels[level].pifoEnque(item);
+			re = levels[level].fifoEnque(item, tag.GetIndex());
 
 
 
@@ -1487,6 +1478,16 @@ namespace ns3 {
 
 
 	QueueDiscItem* re = levels[0].fifoEnque(item, index);
+
+
+
+	if((tag.GetUid() == 14771)|(tag.GetUid() == 14776)|(tag.GetUid() == 14912)){
+
+		cout<<tag.GetUid()<<" enque fifo "<<index<<" in level 0"<<endl;
+
+	}
+
+ 
 
 
 
@@ -1904,7 +1905,7 @@ namespace ns3 {
 
 
 
-	Record("DequeuedPktsList.txt", departureround);
+	Record("DequeuedPktsList.txt", departureround, re);
 
 
 
@@ -1932,6 +1933,45 @@ namespace ns3 {
 
 
 
+	void Gearbox_pl_fid_flex::RecordFlow(uint64_t flowlabel, int departureRound){
+
+		string path = "GBResult/pktsList/";
+
+
+
+		path.append(std::to_string(flowlabel));
+
+
+
+		FILE *fp;
+
+
+
+		//cout<<path<<endl;
+
+
+
+		fp = fopen(path.data(), "a+"); //open and write
+
+
+
+		//fprintf(fp, "%f", Simulator::Now().GetSeconds());
+
+
+
+		fprintf(fp, "%d", departureRound);
+
+
+
+		fprintf(fp, "\t");
+
+
+
+		fclose(fp);
+
+	
+
+	}
 
 
 
@@ -1949,16 +1989,13 @@ namespace ns3 {
 
 
 
+	void Gearbox_pl_fid_flex::Record(string fname, int departureRound, Ptr<QueueDiscItem> item){
 
+		GearboxPktTag tag;
 
+        	item->GetPacket()->PeekPacketTag(tag);
 
-
-
-
-
-
-
-	void Gearbox_pl_fid_flex::Record(string fname, int departureRound){
+		int uid = tag.GetUid();
 
 
 
@@ -2079,6 +2116,14 @@ namespace ns3 {
 
 
 		fprintf(fp2, "\t%s", fname.data());
+
+		
+
+		if((uid == 14776)| (uid == 14912) | (uid == 14771)){
+
+			fprintf(fp2, "%d", uid);
+
+		}
 
 
 
@@ -2304,15 +2349,7 @@ namespace ns3 {
 
 		//get pkt information
 
-
-
 		GearboxPktTag tag;
-
-
-
-
-
-
 
         	item->GetPacket()->PeekPacketTag(tag);
 
@@ -2320,355 +2357,109 @@ namespace ns3 {
 
 		int fifoenque = tag.GetFifoenque();
 
-
-
 		int fifodeque = tag.GetFifodeque();
-
-
 
 		int pifoenque = tag.GetPifoenque();
 
-
-
 		int pifodeque = tag.GetPifodeque();
-
-
 
 		int overflow = tag.GetOverflow();
 
-
-
 		int reload = tag.GetReload();
 
-
+		int uid = tag.GetUid();
 
 		double queuingDelay = tag.GetDequeTime() - tag.GetEnqueTime();
 
-
-
-
-
-
-
 		enqueCount += fifoenque + pifoenque;
-
-
-
-
-
-
 
   		dequeCount += fifodeque + pifodeque;
 
-
-
-		
-
-
-
 		overflowCount += overflow;
-
-
-
-
-
-
 
 		reloadCount +=  reload;
 
-
-
-
-
-
-
 		queuingCount += queuingDelay;
-
-
-
-
-
-
 
 		Rate(enqueCount,dequeCount,overflowCount,reloadCount);
 
-
-
-		
-
-
-
-
-
-
-
 		string path = "GBResult/pktsList/";
-
-
-
-
-
-
 
 		path.append(fname);
 
-
-
-
-
-
-
 		//cout<<path<<endl;
-
-
-
-
-
-
 
 		FILE *fp2;
 
-
-
-
-
-
-
 		fp2 = fopen("GBResult/pktsList/Pktdata", "a+"); //open and write
-
-
-
-
-
-
 
 		fprintf(fp2, "%f", Simulator::Now().GetSeconds());
 
+		fprintf(fp2, "\t%s", "vt:");
 
-
-
-
-
+		fprintf(fp2, "%d", currentRound);
 
 		fprintf(fp2, "\t%s", "depatureRound:");
 
-
-
-
-
-
-
 		fprintf(fp2, "%d", departureRound);
-
-
 
 		fprintf(fp2, "\t%s", "uid:");
 
-		fprintf(fp2, "%lu", item->GetPacket()->GetUid());
-
-                
-
-
+		fprintf(fp2, "%d", uid+departureRound);
 
 		fprintf(fp2, "\t%s", "fifoenque:");
 
-
-
-
-
-
-
 		fprintf(fp2, "%d", fifoenque);
 
-
-
-
-
-
-
 		fprintf(fp2, "%s", "\t");
-
-
-
-
-
-
 
 		fprintf(fp2, "%s", "fifodeque:");
 
-
-
-
-
-
-
 		fprintf(fp2, "%d", fifodeque);
 
-
-
 		fprintf(fp2, "%s", "\t");
-
-
-
-
-
-
 
 		fprintf(fp2, "%s", "pifoenque:");
 
-
-
-
-
-
-
 		fprintf(fp2, "%d", pifoenque);
 
-
-
-
-
-
-
 		fprintf(fp2, "%s", "\t");
-
-
-
-
-
-
 
 		fprintf(fp2, "%s", "pifodeque:");
 
-
-
-
-
-
-
 		fprintf(fp2, "%d", pifodeque);
 
-
-
 		fprintf(fp2, "%s", "\t");
-
-
-
-
-
-
 
 		fprintf(fp2, "%s", "overflow:");
 
-
-
-
-
-
-
 		fprintf(fp2, "%d", overflow);
 
-
-
-
-
-
-
 		fprintf(fp2, "%s", "\t");
-
-
-
-
-
-
 
 		fprintf(fp2, "%s", "reload:");
 
-
-
-
-
-
-
 		fprintf(fp2, "%d", reload);
 
-
-
-		
-
-
-
 		fprintf(fp2, "%s", "\t");
-
-
-
-
-
-
 
 		fprintf(fp2, "%s", "queueing delay:");
 
-
-
-
-
-
-
 		fprintf(fp2, "%lf", queuingDelay);
 
-
-
 		fprintf(fp2, "%s", "\t");
-
-
-
-
-
-
 
 		fprintf(fp2, "%s", "enquetime:");
 
-
-
-
-
-
-
 		fprintf(fp2, "%lf", tag.GetEnqueTime());
-
-
 
 		fprintf(fp2, "%s", "\t");
 
-
-
-
-
-
-
 		fprintf(fp2, "%s", "dequetime:");
-
-
-
-
-
-
 
 		fprintf(fp2, "%lf", tag.GetDequeTime());
 
-
-
-
-
-
-
 		fprintf(fp2, "\n");
-
-
-
-
-
-
 
 		fclose(fp2);
 
@@ -2716,11 +2507,19 @@ namespace ns3 {
 
 		int earliestFifo = levels[earliestLevel].getEarliestFifo();
 
-
-
 		fifoitem = levels[earliestLevel].fifoDeque(earliestFifo);
 
+		GearboxPktTag tag;
 
+
+
+		fifoitem->GetPacket()->PeekPacketTag(tag);
+
+		if((tag.GetUid() == 14771)|(tag.GetUid() == 14776)|(tag.GetUid() == 14912)){
+
+			cout<<tag.GetUid()<<" deque from fifo "<< earliestFifo<<" in level 0"<<endl;
+
+		}
 
 	}
 
@@ -2736,9 +2535,21 @@ namespace ns3 {
 
 		fifoitem = levels[earliestLevel].fifoDeque(currentIndex);
 
+		GearboxPktTag tag;
 
+
+
+		fifoitem->GetPacket()->PeekPacketTag(tag);
+
+		if((tag.GetUid() == 14771)|(tag.GetUid() == 14776)|(tag.GetUid() == 14912)){
+
+			cout<<tag.GetUid()<<" deque from fifo "<< currentIndex<<" in level 0"<<endl;
+
+		}
 
 	}
+
+	
 
 
 
@@ -2767,6 +2578,7 @@ namespace ns3 {
 	this->Reload();
 
 	this->Migration(currentRound);
+
 	
 
 
@@ -2797,13 +2609,21 @@ namespace ns3 {
 
    	QueueDiscItem* pifoitem = levels[earliestLevel].pifoDeque();
 
-
-
 	GearboxPktTag tag;
 
 
 
 	pifoitem->GetPacket()->PeekPacketTag(tag);
+
+	if((tag.GetUid() == 14771)|(tag.GetUid() == 14776)|(tag.GetUid() == 14912)){
+
+		cout<<tag.GetUid()<<" deque from pifo in level "<<earliestLevel<<endl;
+
+	}
+
+
+
+	
 
 
 
@@ -2828,6 +2648,7 @@ namespace ns3 {
 	this->Reload();
 
 	this->Migration(currentRound);
+
 	
 
 
@@ -2843,15 +2664,25 @@ namespace ns3 {
    }
 
    void Gearbox_pl_fid_flex::Reload(){
+
 	for(int j = 1; j<3; j++){
+
 		if(levels[j].getReloadHold() == 1){
+
 			levels[j].updateReloadSize(levels[j].Reload());
+
 			if(levels[j].finishCurrentFifoReload() & !levels[j].ifLowerthanL()){
+
 				levels[j].setReloadHold(0);				
+
 			}
+
 		}
+
 	}
+
     
+
    }
 
 
@@ -2908,23 +2739,25 @@ namespace ns3 {
 
 			Ptr<QueueDiscItem> item = levels[j].fifoDeque(levels[j].getCurrentIndex());
 
-
-
 			GearboxPktTag tag;
 
-
-
-			Packet* packet = GetPointer(GetPointer(item)->GetPacket());	
-
-
-
-			//Get departure round					
-
-
+			Packet* packet = GetPointer(GetPointer(item)->GetPacket());							
 
 			packet->PeekPacketTag(tag);
 
 
+
+			if((tag.GetUid() == 14771)|(tag.GetUid() == 14776)|(tag.GetUid() == 14912)){
+
+				cout<<tag.GetUid()<<" migrate from level "<<j<<" fifo "<<levels[j].getCurrentIndex()<<endl;
+
+			}
+
+
+
+			
+
+			//Get departure round	
 
 			//int departureRound = tag.GetDepartureRound();
 
@@ -3313,4 +3146,10 @@ namespace ns3 {
 }
 
 
+
+
+
+
+
+	
 
