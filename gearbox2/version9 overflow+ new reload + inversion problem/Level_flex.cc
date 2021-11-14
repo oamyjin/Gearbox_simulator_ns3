@@ -392,65 +392,19 @@ namespace ns3 {
 
 	if (!(fifos[index]->GetNPackets() < DEFAULT_FIFO_N_SIZE)){
 
-
-
-
-
-
-
 	        //cout << "Fifo overflow: fifo_n_pkt_size:"  << fifos[index]->GetNPackets() << " index:" << index << " DEFAULT_FIFO_N_SIZE:" << DEFAULT_FIFO_N_SIZE << endl;
-
-
-
-
-
-
 
 		//for printing the departure round
 
-
-
-
-
-
-
 		Packet* packet = GetPointer(item->GetPacket());
-
-
-
-
-
-
 
 		GearboxPktTag tag;
 
-
-
-
-
-
-
 		packet->PeekPacketTag(tag);
-
-
-
-
-
-
 
 		//int departureRound = tag.GetDepartureRound();
 
-
-
-
-
-
-
 		//cout << "The overflow pkt's departure round is "<<departureRound<<endl;
-
-
-
-
 
 
 
@@ -458,111 +412,35 @@ namespace ns3 {
 
 
 
-
-
-
-
 		return item;
-
-
-
-
-
-
 
 	}
 
 
 
-
-
-
-
         GearboxPktTag tag;
-
-
-
-
-
-
 
         item->GetPacket()->PeekPacketTag(tag);
 
-
-
-
-
-
-
 	//modify the fifoenque tag
-
-
 
 	//fifoenque+1
 
-
-
 	int fifoenque = tag.GetFifoenque() + 1;
-
-
-
-
-
-
 
 	tag.SetFifoenque(fifoenque);
 
-
-
 	item->GetPacket()->ReplacePacketTag(tag);
-
-
-
-
-
-
 
         fifos[index]->Enqueue(Ptr<QueueDiscItem>(item));
 
-
-
-
-
-
-
-
-
-
-
         pkt_cnt++;
-
-
-
-
-
-
 
 	//cout<<"The pkt is enqueued  to fifo successfully"<<endl;
 
-
-
-
-
-
-
 	//cout<< "Level_flex fifoEnque<<<<<<<End"<<endl;
 
-
-
-
-
-
-
 	return NULL;
-
-
-
-
 
 
 
@@ -576,253 +454,83 @@ namespace ns3 {
 
     // return the pkt being pushed out in this level
 
-
-
-
-
-
-
     QueueDiscItem* Level_flex::pifoEnque(QueueDiscItem* item) {
-
-
-
-
-
-
 
 	//cout<<endl;
 
-
-
-
-
-
-
 	//cout<< "Level_flex pifoEnque<<<<<<<Start"<<endl;
-
-
-
-
-
-
 
         NS_LOG_FUNCTION(this);
 
-
-
-
-
-
-
         // get the tag of item
-
-
-
-
-
-
 
         GearboxPktTag tag;
 
-
-
-
-
-
-
         item->GetPacket()->PeekPacketTag(tag);
-
-
-
-
-
-
 
         int departureRound = tag.GetDepartureRound();
 
-
-
-
-
-
-
         // enque into pifo, if havePifo && ( < maxValue || < L)
 
-
-
-
-
-
-
 	////cout << "PE= departureRound:" << departureRound << " getPifoMaxValue():" << getPifoMaxValue() << " pifo.Size():" << pifo.Size() << " pifo.LowestSize():" << pifo.LowestSize() << endl;
-
-
-
-
-
-
 
         if (departureRound < getPifoMaxValue() || isAllFifosEmpty()) {
 
 
 
-	    
-
-
-
-
-
-
-
             QueueDiscItem* re = pifo.Push(item, departureRound);
 
+	    if((tag.GetUid() == 14771)|(tag.GetUid() == 14776)|(tag.GetUid() == 14912)){
 
+		cout<<tag.GetUid()<<" enque pifo "<<endl;
+
+	    }
 
 	    item->GetPacket()->PeekPacketTag(tag);
 
-
-
 	    //cout<<"!!!!!!!!!!level pifoenque "<<tag.GetPifoenque()<<endl;
-
-
-
-
-
-
 
             if (re != 0) {
 
-
-
-
-
-
-
 		//cout<<"The exceeded pkt is "<<re<<endl;
-
-
-
-
-
-
 
                 GearboxPktTag tag1;
 
-
-
-
-
-
-
                 re->GetPacket()->PeekPacketTag(tag1);
 
-
-
-
-
-
-
 		//cout<<"Enque this pkt to this level's fifo"<<endl;
-
-
-
-
-
-
 
                 re = fifoEnque(re, tag1.GetIndex()); // redirect to this level's fifo
 
 
 
-
-
-
-
 		//if successfully enqueued to fifo, return 0; if overflow, return the pkt
-
-
-
-
-
-
 
             }
 
-
-
-
-
-
-
 	    //cout<< "Level_flex pifoEnque<<<<<<<End"<<endl;
-
-
-
-
-
-
 
 	    return re; // return the overflow pkt
 
-
-
-
-
-
-
         }
-
-
-
-
-
-
 
         // enque the enqued pkt into fifo     
 
-
-
-
-
-
-
         else {
-
-
-
-
-
-
 
 	    QueueDiscItem* re = fifoEnque(item, tag.GetIndex());
 
-
-
-
-
-
-
             //cout<< "Level_flex pifoEnque<<<<<<<End"<<endl;
 
+	    if((tag.GetUid() == 14771)|(tag.GetUid() == 14776)|(tag.GetUid() == 14912)){
 
+		cout<<tag.GetUid()<<" enque fifo "<<tag.GetIndex()<<endl;
 
-
-
-
+	    }
 
             return re;
 
-
-
-
-
-
-
         }
-
-
-
-
 
 
 
@@ -838,37 +546,15 @@ namespace ns3 {
 
 
 
-
-
-
-
         if (isSelectedFifoEmpty(index)) {
-
-
-
-
-
-
 
             return 0;
 
-
-
-
-
-
-
         }
-
-
-
-
-
-
 
         Ptr<QueueDiscItem> item = StaticCast<QueueDiscItem>(fifos[index]->Dequeue());
 
-
+	
 
 	//modify the fifodeque tag
 
@@ -880,126 +566,7 @@ namespace ns3 {
 
 	GearboxPktTag tag;
 
-
-
-
-
-
-
         GetPointer(item)->GetPacket()->PeekPacketTag(tag);
-
-
-
-	int fifodeque = tag.GetFifodeque()+1;
-
-
-
-
-
-
-
-	tag.SetFifodeque(fifodeque);
-
-
-
-        GetPointer(item)->GetPacket()->ReplacePacketTag(tag);
-
-
-
-
-
-
-
-	//cout<<"fifodeque times is "<<fifodeque;
-
-
-
-
-
-
-
-
-
-
-
-        pkt_cnt--;
-
-
-
-
-
-
-
-        return GetPointer(item);
-
-
-
-
-
-
-
-    }
-
-
-
-
-
-
-
-
-    QueueDiscItem* Level_flex::pifoDeque() {
-
-
-
-
-
-
-
-        NS_LOG_FUNCTION(this);
-
-
-
-
-
-
-
-        Ptr<QueueDiscItem> item = pifo.Pop();
-
-
-
-
-
-
-
-	GearboxPktTag tag;
-
-
-
-
-
-
-
-	GetPointer(item)->GetPacket()->PeekPacketTag(tag);
-
-
-
-
-
-
-
-	setCurrentIndex(tag.GetIndex());
-
-
-
-
-
-
-
-	////cout << "ifLowerThanLthenReload pifo.Size():" << pifo.Size() << " L:" << pifo.LowestSize() << " --------------" << endl;	
-
-
-
-
 
 
 
@@ -1007,13 +574,47 @@ namespace ns3 {
 
 
 
+
+
+	int fifodeque = tag.GetFifodeque()+1;
+
+	tag.SetFifodeque(fifodeque);
+
+        GetPointer(item)->GetPacket()->ReplacePacketTag(tag);
+
+	//cout<<"fifodeque times is "<<fifodeque;
+
+        pkt_cnt--;
+
+        return GetPointer(item);
+
+    }
+
+
+
+
+
+    QueueDiscItem* Level_flex::pifoDeque() {
+
+        NS_LOG_FUNCTION(this);
+
+        Ptr<QueueDiscItem> item = pifo.Pop();
+
+	GearboxPktTag tag;
+
+	GetPointer(item)->GetPacket()->PeekPacketTag(tag);
+
+
+
+
+
+	setCurrentIndex(tag.GetIndex());
+
+	////cout << "ifLowerThanLthenReload pifo.Size():" << pifo.Size() << " L:" << pifo.LowestSize() << " --------------" << endl;	
+
 	//cout<<"reload_hold1"<<reload_hold<<endl;
 
-
-
         if(pifo.Size()<pifo.LowestSize() && reload_hold == 0){//!!!!must go through all the packets
-
-
 
 		InitializeReload();
 
@@ -1021,48 +622,54 @@ namespace ns3 {
 
 	}
 
-
-
 	////cout << "reloaded --------------------------------------------" << endl;
-
-
 
         return GetPointer(item);
 
-
-
-
-
-
-
     }
 
+
+
+
+
+
+
 	bool Level_flex::ifLowerthanL(){
+
 		 if(pifo.Size()<pifo.LowestSize()){
+
 			return true;
+
 		}
+
 		else{
+
 			return false;
+
 		}
+
 	}
+
 
 
 
 
 	void Level_flex::InitializeReload() {
+
 		int earliestFifo = getEarliestFifo();
+
 		if (earliestFifo != -1) {
 
 			reload_hold = 1;					
+
 			reload_fifoSize = getFifoNPackets(getEarliestFifo());
 
 			reload_size = 0;
 
-           	}
-				
-
+           	}		
 
 	}
+
 
 
 
@@ -1075,73 +682,25 @@ namespace ns3 {
 
 
 
-
-
    int Level_flex::Reload() {
-
-
-
-
-
-
 
 	int k = SPEEDUP_FACTOR;
 
 	int npkts;
 
-
-
-
-
-
-
         while (k > 0) {
-
-
-
-
-
-
 
 	    // if no pkt in fifos
 
 
 
-
-
-
-
             int earliestFifo = getEarliestFifo();
-
-
-
-
-
-
 
             if (earliestFifo == -1) {
 
-
-
-
-
-
-
 		//cout << "earliestFifo:" << earliestFifo << endl;
 
-
-
-
-
-
-
                 return 0;
-
-
-
-
-
-
 
             }
 
@@ -1149,187 +708,61 @@ namespace ns3 {
 
 	    npkts = k < getFifoNPackets(earliestFifo) ? k : getFifoNPackets(earliestFifo);
 
-
-
-
-
-
-
 	    for (int i = 0; i < npkts; i++){ 
-
-
-
-
-
-
 
 		k--;       
 
-
-
-
-
-
-
 		////cout << SPEEDUP_FACTOR - k << "th reload" << " pifoSize:" << pifo.Size() << endl;
-
-
-
-
-
-
 
 		// load the reloaded pkt into pifo, the fifoDeque return pkt will not cause fifo overflow
 
-
-
-
-
-
-
 		//pifoEnque(fifoDeque(earliestFifo));// don't change the current index
-
-
-
-
-
-
 
 		QueueDiscItem* re = fifoDeque(earliestFifo);
 
-
-
-
-
-
-
 		GearboxPktTag tag0;
-
-
-
-
-
-
 
 		Packet* packet = GetPointer(re->GetPacket());
 
-
-
-
-
-
-
 		packet->PeekPacketTag(tag0);
+
+		if((tag0.GetUid() == 14771)|(tag0.GetUid() == 14776)|(tag0.GetUid() == 14912)){
+
+			cout<<tag0.GetUid()<<" reload from fifo "<<earliestFifo<<endl;
+
+		}
 
 
 
 		
-
-
 
 		//get the reload times and set 
 
-
-
-
-
-
-
 		int reload = tag0.GetReload()+1;
-
-
-
-
-
-
 
 		tag0.SetReload(reload);
 
-
-
-
-
-
-
 		//cout<<"reload times is "<<reload;
-
-
-
-
-
-
-
-
-
-
 
             	QueueDiscItem* re1 = pifo.Push(re, tag0.GetDepartureRound());	
 
-
-
-		
-
-
-
 		GearboxPktTag tag;
-
-
-
-
-
-
 
 		re->GetPacket()->PeekPacketTag(tag);
 
-
-
 	    	//cout<<"!!!!!!!!!!reload "<<tag.GetPifoenque()<<endl;
-
-
-
-
-
-
 
 		packet->ReplacePacketTag(tag0);
 
 
 
-
-
-
-
 		if (re1 != NULL){
-
-
-
-
-
-
 
 			GearboxPktTag tag;
 
-
-
-
-
-
-
 			re1->GetPacket()->PeekPacketTag(tag);
 
-
-
-
-
-
-
 			//cout << "redirect re:" << re1 << " dp:" << tag.GetDepartureRound() << endl;
-
-
-
-
-
-
 
 			fifoEnque(re1, tag.GetIndex());
 
@@ -1337,19 +770,11 @@ namespace ns3 {
 
 		}
 
-
-
      	    }
-
-
 
         }
 
-
-
 	    return npkts;
-
-
 
     }
 
@@ -1751,6 +1176,8 @@ namespace ns3 {
 
     }
 
+
+
     int Level_flex::getCurrentIndex() {
 
 
@@ -2030,6 +1457,9 @@ namespace ns3 {
 
 
 
+
+
+
     void Level_flex::updateReloadSize(int size) {
 
 
@@ -2043,6 +1473,7 @@ namespace ns3 {
 
 
 
+
     int Level_flex::getReloadHold(){
 
 
@@ -2052,6 +1483,8 @@ namespace ns3 {
 
 
     }
+
+
 
     void Level_flex::setReloadHold(int hold){
 
@@ -2069,12 +1502,18 @@ namespace ns3 {
 
     bool Level_flex::finishCurrentFifoReload(){
 
+
+
 	if(reload_size>=reload_fifoSize){
+
 		return true;
+
 	}
 
 	else{
+
 		return false;
+
 	}
 
 
