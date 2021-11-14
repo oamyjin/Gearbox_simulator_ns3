@@ -1256,6 +1256,17 @@ namespace ns3 {
 
 
  	QueueDiscItem* re = levels[level].pifoEnque(item);
+	if((tag.GetUid() == 14771)|(tag.GetUid() == 14776)|(tag.GetUid() == 14912)){
+		//GearboxPktTag tag1;
+
+		//packet->PeekPacketTag(tag1);
+
+		//re->GetPacket()->PeekPacketTag(tag1);
+
+		//cout<<tag.GetUid()<<" re "<<tag1.GetUid();
+
+	}
+	
 
 	
 
@@ -1334,6 +1345,7 @@ namespace ns3 {
 
 
 		tag.SetIndex(cal_index(level, tag.GetDepartureRound()));
+		
 
 
 
@@ -1692,14 +1704,28 @@ namespace ns3 {
 
 
 	int term = 1;
+	if((uid == 14776)| (uid == 14912) | (uid == 14771)){
+
+			cout<<"level depar"<<level<<" "<<departureRound<<endl;
 
 
+
+	}
+	
 
 	for (int i = 0; i < level; i++){
 
-
+ 
 
 		term *= FIFO_PER_LEVEL;
+		if((uid == 14776)| (uid == 14912) | (uid == 14771)){
+
+			cout<<"term "<<term<<endl;
+
+
+
+		}
+		
 
 
 
@@ -1708,6 +1734,14 @@ namespace ns3 {
 
 
 	////cout << "CalculateIndex:" << departureRound / term % FIFO_PER_LEVEL << endl;
+	if((uid == 14776)| (uid == 14912) | (uid == 14771)){
+
+			cout<<"fifo "<<departureRound / term % FIFO_PER_LEVEL<<endl;
+
+
+
+	}
+	
 
 
 
@@ -1840,6 +1874,9 @@ namespace ns3 {
 
 
 	}
+	this->Reload();
+
+	this->Migration(currentRound);
 
 
 
@@ -2575,10 +2612,6 @@ namespace ns3 {
 
 	//cout<<"Deque pkt "<<tag.GetDepartureRound()<<" from fifo in level "<< 0 <<endl;
 
-	this->Reload();
-
-	this->Migration(currentRound);
-
 	
 
 
@@ -2645,9 +2678,7 @@ namespace ns3 {
 
 	
 
-	this->Reload();
-
-	this->Migration(currentRound);
+	
 
 	
 
@@ -2669,13 +2700,26 @@ namespace ns3 {
 
 		if(levels[j].getReloadHold() == 1){
 
-			levels[j].updateReloadSize(levels[j].Reload());
-
-			if(levels[j].finishCurrentFifoReload() & !levels[j].ifLowerthanL()){
-
-				levels[j].setReloadHold(0);				
+			levels[j].updateReloadSize(levels[j].Reload(SPEEDUP_FACTOR));
+			while ( levels[j].getRemainingQ() != 0){
+				if(!levels[j].ifLowerthanL()){
+					levels[j].setReloadHold(0);
+					levels[j].setRemainingQ(SPEEDUP_FACTOR);
+					break;
+				}
+				levels[j].InitializeReload();					
+				levels[j].updateReloadSize(levels[j].Reload(levels[j].getRemainingQ()));
 
 			}
+			if(!levels[j].ifLowerthanL()){
+				levels[j].setReloadHold(0);
+				levels[j].setRemainingQ(SPEEDUP_FACTOR);
+
+			}
+
+								
+
+
 
 		}
 
@@ -2684,6 +2728,7 @@ namespace ns3 {
     
 
    }
+
 
 
 
