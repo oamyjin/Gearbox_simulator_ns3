@@ -247,14 +247,19 @@ namespace ns3 {
 
 
 	int getPifoSize();
+
 	void InitializeReload();
+
 	int getReloadHold();
+
 	void setReloadHold(int hold);
 
 	int getReloadSize();
+
 	void updateReloadSize(int size);
 
  	bool finishCurrentFifoReload();
+
 	bool ifLowerthanL();
 
 
