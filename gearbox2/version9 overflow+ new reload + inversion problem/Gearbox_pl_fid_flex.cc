@@ -875,6 +875,11 @@ namespace ns3 {
 
 
 			packet->PeekPacketTag(tag);
+			if((tag.GetUid() == 6186)|(tag.GetUid() == 6187)|(tag.GetUid() == 6270)){
+				cout<<tag.GetUid()<<" L1 depart"<<departureRound<<" Fifo per"<<FIFO_PER_LEVEL<<" set level "<<departureRound / FIFO_PER_LEVEL % FIFO_PER_LEVEL<<endl;
+
+			}
+			
 
 			//item->SetTimeStamp(Simulator::Now());
 
@@ -925,6 +930,10 @@ namespace ns3 {
 
 
 			packet->PeekPacketTag(tag);
+			if((tag.GetUid() == 6186)|(tag.GetUid() == 6187)|(tag.GetUid() == 6270)){
+				cout<<tag.GetUid()<<" L0 depart"<<departureRound<<" Fifo per"<<FIFO_PER_LEVEL<<" set level "<<departureRound % FIFO_PER_LEVEL<<endl;
+
+			}
 
 			//item->SetTimeStamp(Simulator::Now());
 
@@ -1256,7 +1265,7 @@ namespace ns3 {
 
 
  	QueueDiscItem* re = levels[level].pifoEnque(item);
-	if((tag.GetUid() == 14771)|(tag.GetUid() == 14776)|(tag.GetUid() == 14912)){
+	if((tag.GetUid() == 6186)|(tag.GetUid() == 6187)|(tag.GetUid() == 6270)){
 		//GearboxPktTag tag1;
 
 		//packet->PeekPacketTag(tag1);
@@ -1341,6 +1350,7 @@ namespace ns3 {
 
 
 		re_packet->PeekPacketTag(tag);
+		
 
 
 
@@ -1493,7 +1503,7 @@ namespace ns3 {
 
 
 
-	if((tag.GetUid() == 14771)|(tag.GetUid() == 14776)|(tag.GetUid() == 14912)){
+	if((tag.GetUid() == 6186)|(tag.GetUid() == 6187)|(tag.GetUid() == 6270)){
 
 		cout<<tag.GetUid()<<" enque fifo "<<index<<" in level 0"<<endl;
 
@@ -1704,7 +1714,7 @@ namespace ns3 {
 
 
 	int term = 1;
-	if((uid == 14776)| (uid == 14912) | (uid == 14771)){
+	if((uid == 6187)| (uid == 6270) | (uid == 6186)){
 
 			cout<<"level depar"<<level<<" "<<departureRound<<endl;
 
@@ -1718,7 +1728,7 @@ namespace ns3 {
  
 
 		term *= FIFO_PER_LEVEL;
-		if((uid == 14776)| (uid == 14912) | (uid == 14771)){
+		if((uid == 6187)| (uid == 6270) | (uid == 6186)){
 
 			cout<<"term "<<term<<endl;
 
@@ -1734,7 +1744,7 @@ namespace ns3 {
 
 
 	////cout << "CalculateIndex:" << departureRound / term % FIFO_PER_LEVEL << endl;
-	if((uid == 14776)| (uid == 14912) | (uid == 14771)){
+	if((uid == 6187)| (uid == 6270) | (uid == 6186)){
 
 			cout<<"fifo "<<departureRound / term % FIFO_PER_LEVEL<<endl;
 
@@ -2156,7 +2166,7 @@ namespace ns3 {
 
 		
 
-		if((uid == 14776)| (uid == 14912) | (uid == 14771)){
+		if((uid == 6187)| (uid == 6270) | (uid == 6186)){
 
 			fprintf(fp2, "%d", uid);
 
@@ -2552,7 +2562,7 @@ namespace ns3 {
 
 		fifoitem->GetPacket()->PeekPacketTag(tag);
 
-		if((tag.GetUid() == 14771)|(tag.GetUid() == 14776)|(tag.GetUid() == 14912)){
+		if((tag.GetUid() == 6186)|(tag.GetUid() == 6187)|(tag.GetUid() == 6270)){
 
 			cout<<tag.GetUid()<<" deque from fifo "<< earliestFifo<<" in level 0"<<endl;
 
@@ -2578,7 +2588,7 @@ namespace ns3 {
 
 		fifoitem->GetPacket()->PeekPacketTag(tag);
 
-		if((tag.GetUid() == 14771)|(tag.GetUid() == 14776)|(tag.GetUid() == 14912)){
+		if((tag.GetUid() == 6186)|(tag.GetUid() == 6187)|(tag.GetUid() == 6270)){
 
 			cout<<tag.GetUid()<<" deque from fifo "<< currentIndex<<" in level 0"<<endl;
 
@@ -2648,7 +2658,7 @@ namespace ns3 {
 
 	pifoitem->GetPacket()->PeekPacketTag(tag);
 
-	if((tag.GetUid() == 14771)|(tag.GetUid() == 14776)|(tag.GetUid() == 14912)){
+	if((tag.GetUid() == 6186)|(tag.GetUid() == 6187)|(tag.GetUid() == 6270)){
 
 		cout<<tag.GetUid()<<" deque from pifo in level "<<earliestLevel<<endl;
 
@@ -2792,7 +2802,7 @@ namespace ns3 {
 
 
 
-			if((tag.GetUid() == 14771)|(tag.GetUid() == 14776)|(tag.GetUid() == 14912)){
+			if((tag.GetUid() == 6186)|(tag.GetUid() == 6187)|(tag.GetUid() == 6270)){
 
 				cout<<tag.GetUid()<<" migrate from level "<<j<<" fifo "<<levels[j].getCurrentIndex()<<endl;
 
