@@ -115,6 +115,7 @@ namespace ns3 {
 
 
      int reload_size = 0;//record the size of packets which already have been reloaded
+     int remainingQ = SPEEDUP_FACTOR;
 
 
 
@@ -178,7 +179,7 @@ namespace ns3 {
 
 
 
-     int Reload(void);
+     int Reload(int k);//k  is remainingQ
 
 
 
@@ -261,6 +262,8 @@ namespace ns3 {
  	bool finishCurrentFifoReload();
 
 	bool ifLowerthanL();
+	void setRemainingQ(int remaining);
+	int getRemainingQ();
 
 
 
