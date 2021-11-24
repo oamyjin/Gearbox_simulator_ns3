@@ -486,7 +486,7 @@ namespace ns3 {
 
             QueueDiscItem* re = pifo.Push(item, departureRound);
 
-	    if((tag.GetUid() == 2522)|(tag.GetUid() == 2423)|(tag.GetUid() == 2520)){
+	    if((tag.GetUid() == 18243)){
 
 		cout<<tag.GetUid()<<" enque pifo "<<endl;
 
@@ -538,9 +538,9 @@ namespace ns3 {
 
             //cout<< "Level_flex pifoEnque<<<<<<<End"<<endl;
 
-	    if((tag.GetUid() == 2522)|(tag.GetUid() == 2423)|(tag.GetUid() == 2520)){
+	    if((tag.GetUid() == 18243)){
 
-		cout<<tag.GetUid()<<" enque fifo "<<tag.GetIndex()<<endl;
+		cout<<tag.GetUid()<<" enque fifo "<<cal_index(departureround)<<endl;
 
 	    }
 
@@ -674,7 +674,8 @@ namespace ns3 {
 
 		int earliestFifo = getEarliestFifo();
 
-		
+
+		cout<<"the earliest fifo"<<earliestFifo<<endl;
 
 		if (earliestFifo != -1) {
 
@@ -704,8 +705,6 @@ namespace ns3 {
 
 	int npkts;
 
-        while (k > 0) {
-
 	    // if no pkt in fifos
 
 
@@ -725,6 +724,7 @@ namespace ns3 {
 	    npkts = k < getFifoNPackets(earliestFifo) ? k : getFifoNPackets(earliestFifo);
 
 	    remainingQ = k -npkts;
+	    cout<<"reload earliest fifo"<<earliestFifo<<"npkts"<<npkts<<"remainingQ"<<remainingQ<<endl;
 
 	    for (int i = 0; i < npkts; i++){ 
 
@@ -744,7 +744,7 @@ namespace ns3 {
 
 		packet->PeekPacketTag(tag0);
 
-		if((tag0.GetUid() == 2522)|(tag0.GetUid() == 2423)|(tag0.GetUid() == 2520)){
+		if((tag0.GetUid() == 18243)){
 
 			cout<<tag0.GetUid()<<" reload from fifo "<<earliestFifo<<endl;
 
@@ -807,8 +807,6 @@ namespace ns3 {
 
 
 		}
-
-     	    }
 
         }
 
@@ -1534,7 +1532,7 @@ namespace ns3 {
 
 		packet->PeekPacketTag(tag);
 
-		cout << "(" << i << ": " << tag.GetDepartureRound() << ", " << tag.GetUid() << ", "<<tag.GetIndex()<<") ";
+		cout << "(" << i << ": " << tag.GetDepartureRound() << ", " << tag.GetUid() << ", "<<cal_index(tag.GetDepartureRound())<<") ";
 
 		fifos[index]->Enqueue(item);
 
