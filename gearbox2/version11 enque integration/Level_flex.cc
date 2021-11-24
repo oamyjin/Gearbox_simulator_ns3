@@ -674,7 +674,8 @@ namespace ns3 {
 
 		int earliestFifo = getEarliestFifo();
 
-		
+
+		cout<<"the earliest fifo"<<earliestFifo<<endl;
 
 		if (earliestFifo != -1) {
 
@@ -704,8 +705,6 @@ namespace ns3 {
 
 	int npkts;
 
-        while (k > 0) {
-
 	    // if no pkt in fifos
 
 
@@ -725,6 +724,7 @@ namespace ns3 {
 	    npkts = k < getFifoNPackets(earliestFifo) ? k : getFifoNPackets(earliestFifo);
 
 	    remainingQ = k -npkts;
+	    cout<<"reload earliest fifo"<<earliestFifo<<"npkts"<<npkts<<"remainingQ"<<remainingQ<<endl;
 
 	    for (int i = 0; i < npkts; i++){ 
 
@@ -807,8 +807,6 @@ namespace ns3 {
 
 
 		}
-
-     	    }
 
         }
 
