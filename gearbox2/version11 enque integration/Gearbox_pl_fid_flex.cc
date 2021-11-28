@@ -2328,6 +2328,13 @@ namespace ns3 {
 		fprintf(fp2, "%d", currentRound);
 
 
+		fprintf(fp2, " %s", "dp:");
+
+
+
+		fprintf(fp2, "%d", departureRound);
+
+
 
 		fprintf(fp2, "\t%s", "L0 fifos:");
 
@@ -2482,6 +2489,50 @@ namespace ns3 {
 
 
 		fclose(fpl2);
+
+		
+		FILE *fpl3;
+
+
+		fpl3 = fopen("GBResult/pktsList/pifo1", "a+"); //open and write
+
+
+
+		fprintf(fpl3, "%f", Simulator::Now().GetSeconds());
+
+
+
+		fprintf(fpl3, "\t%d", levels[1].getPifoSize());
+
+
+
+		fprintf(fpl3, "\n");
+
+
+
+		fclose(fpl3);
+
+	
+		FILE *fpl4;
+
+
+		fpl4 = fopen("GBResult/pktsList/pifo2", "a+"); //open and write
+
+
+
+		fprintf(fpl4, "%f", Simulator::Now().GetSeconds());
+
+
+
+		fprintf(fpl4, "\t%d", levels[2].getPifoSize());
+
+
+
+		fprintf(fpl4, "\n");
+
+
+
+		fclose(fpl4);
 
 
 
