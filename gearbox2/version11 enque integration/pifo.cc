@@ -23,7 +23,7 @@ namespace ns3 {
 		return tid;
 	}
 
-	Pifo::Pifo() : Pifo(10,3) {
+	Pifo::Pifo() : Pifo(7,2) {
 		NS_LOG_FUNCTION(this);
 	}
 
@@ -231,3 +231,4 @@ namespace ns3 {
 		}
 		cout << endl;
 	}
+}
