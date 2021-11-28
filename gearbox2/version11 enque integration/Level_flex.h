@@ -62,7 +62,7 @@ namespace ns3 {
 
 
 
-     static const int SPEEDUP_FACTOR = 4;
+     static const int SPEEDUP_FACTOR = 2;
 
 
 
@@ -98,9 +98,9 @@ namespace ns3 {
 
 
 
-     int H_value = 10;    //high threshold of pifo
+     int H_value =7;    //high threshold of pifo
 
-     int L_value =3;    //low threshold of pifo
+     int L_value =2;    //low threshold of pifo
 
 
 
