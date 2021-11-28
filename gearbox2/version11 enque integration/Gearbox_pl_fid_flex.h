@@ -40,7 +40,7 @@ namespace ns3 {
 
         static const int TIMEUNIT = 1;    // 01032019 Peixuan default brustness
 
- 	static const int SPEEDUP_FACTOR = 4;
+ 	static const int SPEEDUP_FACTOR = 2;
 
         int volume;                     // num of Level_flexs in scheduler
 
