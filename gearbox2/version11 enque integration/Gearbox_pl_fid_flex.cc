@@ -264,11 +264,11 @@ namespace ns3 {
 
 		int departureRound = tag.GetDepartureRound();
 
-		if(currentRound >=2298&& currentRound<=2310){
+		//if(currentRound >=100&& currentRound<=160){
 
-			cout << "earliest fifopeek_depRound:" << departureRound << " pifopeek_tagmin:" << tag_min << endl;
+			//cout << "earliest fifopeek_depRound:" << departureRound << " pifopeek_tagmin:" << tag_min << endl;
 
-		}
+		//}
 
 
 
@@ -324,9 +324,12 @@ namespace ns3 {
 
     void Gearbox_pl_fid_flex::setCurrentRound(int currentRound) {
 
+	if(this->currentRound <= currentRound){
 
+		this->currentRound = currentRound;
 
-        this->currentRound = currentRound;
+	}
+	
 
 
 
@@ -343,6 +346,10 @@ namespace ns3 {
 
 
 	levels[1].setCurrentIndex(level1_currentFifo);
+	//if(currentRound == 150){
+		//cout<<"currentfifo"<<level1_currentFifo<<endl;
+	//}
+        
 
 
 
@@ -866,9 +873,17 @@ namespace ns3 {
 
 	if ((departureRound - currentRound) >= (FIFO_PER_LEVEL * FIFO_PER_LEVEL)){
 
+		
+
 		if(hasTag == 0){
 
 			AddTag(2, departureRound, uid, item);
+
+			if((tag.GetUid() == 136)){
+
+			cout<<tag.GetUid()<<" L2 depart"<<tag.GetDepartureRound()<<" set index "<<departureRound / FIFO_PER_LEVEL % FIFO_PER_LEVEL<<endl;
+
+			}
 
 		}
 
@@ -886,15 +901,17 @@ namespace ns3 {
 
 	else if ((departureRound - currentRound) >= FIFO_PER_LEVEL){
 
-		if((tag.GetUid() == 18243)){
-
-			cout<<tag.GetUid()<<" L1 depart"<<tag.GetDepartureRound()<<" set index "<<departureRound / FIFO_PER_LEVEL % FIFO_PER_LEVEL<<endl;
-
-		}
+		
 
 		if(hasTag == 0){
 
 			AddTag(1, departureRound, uid, item);
+
+			if((tag.GetUid() == 136)){
+
+			cout<<tag.GetUid()<<" L1 depart"<<tag.GetDepartureRound()<<" set index "<<departureRound / FIFO_PER_LEVEL % FIFO_PER_LEVEL<<endl;
+
+			}
 
 		}
 
@@ -1146,7 +1163,9 @@ namespace ns3 {
 
 
 
-	if((tag.GetUid() == 18243)){
+	if((tag.GetUid() == 136)){
+
+		cout<<"currentRound"<<currentRound<<endl;
 
 		cout<<tag.GetUid()<<" enque fifo "<<index<<" in level 0"<<endl;
 
@@ -1546,7 +1565,7 @@ namespace ns3 {
 
 		fifoitem->GetPacket()->PeekPacketTag(tag);
 
-		if((tag.GetUid() == 18243)){
+		if((tag.GetUid() == 136)){
 
 			cout<<tag.GetUid()<<" deque from fifo "<< earliestFifo<<" in level 0"<<endl;
 
@@ -1572,7 +1591,7 @@ namespace ns3 {
 
 		fifoitem->GetPacket()->PeekPacketTag(tag);
 
-		if((tag.GetUid() == 18243)){
+		if((tag.GetUid() == 136)){
 
 			cout<<tag.GetUid()<<" deque from fifo "<< currentIndex<<" in level 0"<<endl;
 
@@ -1642,7 +1661,7 @@ namespace ns3 {
 
 	pifoitem->GetPacket()->PeekPacketTag(tag);
 
-	if((tag.GetUid() == 18243)){
+	if((tag.GetUid() == 136)){
 
 		cout<<tag.GetUid()<<" deque from pifo in level "<<earliestLevel<<endl;
 
@@ -1690,7 +1709,7 @@ namespace ns3 {
 
    void Gearbox_pl_fid_flex::Reload(){
 
-	if(currentRound >=17316&& currentRound<=17362){
+	if(currentRound >=100&& currentRound<=166){
 
 		cout<<"vt: "<<currentRound<<endl;
 
@@ -1724,7 +1743,7 @@ namespace ns3 {
 
 	for(int j = 1; j<3; j++){
 
-		if(currentRound >=17316&& currentRound<=17362){
+		if(currentRound >=100&& currentRound<=166){
 
 			cout<<"reload_hold"<<levels[j].getReloadHold()<<endl;
 
@@ -1842,7 +1861,7 @@ namespace ns3 {
 
 
 
-			if((tag.GetUid() == 18243)){
+			if((tag.GetUid() == 136)){
 
 				cout<<tag.GetUid()<<" migrate from level "<<j<<" fifo "<<levels[j].getCurrentIndex()<<endl;
 
