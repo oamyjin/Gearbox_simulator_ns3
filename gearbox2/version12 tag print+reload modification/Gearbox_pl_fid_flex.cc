@@ -1120,7 +1120,7 @@ namespace ns3 {
 
 			re_packet->ReplacePacketTag(tag);
 
-
+			level = level+1;
 
 			re = levels[level].fifoEnque(re, cal_index(level,tag.GetDepartureRound()));
 
