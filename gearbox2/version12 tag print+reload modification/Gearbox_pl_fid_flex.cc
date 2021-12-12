@@ -1112,7 +1112,7 @@ namespace ns3 {
 
 
 
-			tag.SetOverflow(1);
+			tag.SetOverflow(overflow);
 
 			Replace_string h = Replace_string();
 
@@ -1296,7 +1296,7 @@ namespace ns3 {
 
 
 
-			tag.SetOverflow(1);
+			tag.SetOverflow(overflow);
 
 			Replace_string h = Replace_string();
 
