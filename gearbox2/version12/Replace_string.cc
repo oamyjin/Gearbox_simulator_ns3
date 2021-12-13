@@ -35,9 +35,28 @@ namespace ns3 {
 		NS_LOG_FUNCTION(this);
 	}
 
-	bool Replace_string::FixNewFile(int uid, string target, float time)
+	bool Replace_string::FixNewFile(QueueDiscItem* item, int uid, string target, float time)
 	{	
-		fstream fixstream("/home/pc/ns-allinone-3.26/ns-3.26/GBResult/pktsList/tagRecord.txt"); // fstream 默认以读写方式打开文件,支持对同一文件同时读写操作
+		Packet* packet = GetPointer(item->GetPacket());
+
+		GearboxPktTag tag;
+
+		packet->PeekPacketTag(tag);
+		//cout<<"flow number"<<tag.GetFlowNo()<<endl;
+		//int flowNo = tag.GetFlowNo();
+		fstream fixstream("/home/pc/ns-allinone-3.26/ns-3.26/GBResult/pktsList/tagRecord.txt"); 
+		//fstream fixstream;
+		/*if(flowNo == 1){
+			fstream fixstream("/home/pc/ns-allinone-3.26/ns-3.26/GBResult/pktsList/tagRecord1.txt"); 
+		}
+		else if(flowNo == 2){
+			fstream fixstream("/home/pc/ns-allinone-3.26/ns-3.26/GBResult/pktsList/tagRecord2.txt"); 
+		}
+		else if(flowNo == 3){
+			fstream fixstream("/home/pc/ns-allinone-3.26/ns-3.26/GBResult/pktsList/tagRecord3.txt"); 
+		}
+		else{cout<<"error"<<endl;}*/
+		// fstream 默认以读写方式打开文件,支持对同一文件同时读写操作
 		if(!fixstream){  
   			cout<<"不能打开目的文件：test.txt"<<'\n';  
   			exit(1);  
@@ -55,6 +74,7 @@ namespace ns3 {
 				if( target=="fifoenque"){
 					pos = str.find("fifoenque:");
 					pointer = 0;
+					//cout<<"fifoenque"<<endl;
 				}
 				else if(target=="fifodeque"){
 					pos = str.find("fifodeque:");
@@ -97,6 +117,7 @@ namespace ns3 {
 				//cout<<"ouput[pointer]"<<output[pointer];
 				if(pointer<=6){
 					str.replace(pos+strlen(target.c_str()) +1, 1, std::to_string(output[pointer]+1));
+					//cout<<"fifoenque@@@"<<std::to_string(output[pointer])<<endl;
 				}
 				else{
 					str.replace(pos+strlen(target.c_str()) +1, 8, std::to_string(time));
@@ -148,8 +169,18 @@ namespace ns3 {
 
 	}
 
-	int Replace_string::metadata_access_time(){
-		fstream fixstream("/home/pc/ns-allinone-3.26/ns-3.26/GBResult/pktsList/tagRecord.txt"); // fstream 默认以读写方式打开文件,支持对同一文件同时读写操作
+	/*int Replace_string::metadata_access_time(){
+		if(flowNo = 1){
+			fstream fixstream("/home/pc/ns-allinone-3.26/ns-3.26/GBResult/pktsList/tagRecord1.txt"); 
+		}
+		else if(flowNo = 2){
+			fstream fixstream("/home/pc/ns-allinone-3.26/ns-3.26/GBResult/pktsList/tagRecord2.txt"); 
+		}
+		else if(flowNo = 3){
+			fstream fixstream("/home/pc/ns-allinone-3.26/ns-3.26/GBResult/pktsList/tagRecord3.txt"); 
+		}
+		else{cout<<"error"<<endl;}
+		// fstream 默认以读写方式打开文件,支持对同一文件同时读写操作
 		if(!fixstream){  
   			cout<<"不能打开目的文件：test.txt"<<'\n';  
   			exit(1);  
@@ -163,7 +194,7 @@ namespace ns3 {
 			}
 		}
 		return statis;
-	}
+	}*/
 
 
 
