@@ -39,7 +39,7 @@ namespace ns3 {
 		 *
 		 * Enque into Pifo at the right position (increasing, the top is the smallest)
 		 */
-		QueueDiscItem* Push(QueueDiscItem* item, int departureRound);
+		QueueDiscItem* Push(QueueDiscItem* item, int departureRound, int flowid);
 
 		/**
 		* \returns The top queueitem
