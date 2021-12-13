@@ -18,9 +18,9 @@ namespace ns3 {
 		~Replace_string();
 		static TypeId GetTypeId(void);
 
-		bool FixNewFile(int uid, string target, float time);
+		bool FixNewFile(QueueDiscItem* item, int uid, string target, float time);
 		int* GetNumber(string str);
-		int metadata_access_time();
+		//int metadata_access_time();
 
 
    };
