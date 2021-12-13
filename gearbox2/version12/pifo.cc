@@ -7,7 +7,8 @@
 #include "pifo.h"
 #include "ns3/log.h"
 #include <vector>
-
+#include "ns3/Replace_string.h"
+#include "ns3/simulator.h"
 namespace ns3 {
 
 	NS_LOG_COMPONENT_DEFINE("Pifo");
@@ -23,7 +24,7 @@ namespace ns3 {
 		return tid;
 	}
 
-	Pifo::Pifo() : Pifo(50,30) {
+	Pifo::Pifo() : Pifo(20,10) {
 		NS_LOG_FUNCTION(this);
 	}
 
@@ -39,7 +40,7 @@ namespace ns3 {
 	}
 
 
-	QueueDiscItem* Pifo::Push(QueueDiscItem* item, int dRound) {
+	QueueDiscItem* Pifo::Push(QueueDiscItem* item, int dRound, int flowid) {
 		// insert into the list directly if empty
 		QueueDiscItem* re = NULL;
 		//cout << "PIFO list.size():" << list.size();
@@ -56,9 +57,8 @@ namespace ns3 {
 			//pifoenque+1
 			GearboxPktTag tag;
         		item->GetPacket()->PeekPacketTag(tag);
-			int pifoenque = tag.GetPifoenque()+1;
-			tag.SetPifoenque(pifoenque);
-			item->GetPacket()->ReplacePacketTag(tag);
+			Replace_string h = Replace_string();
+			h.FixNewFile(item, tag.GetUid(), "pifoenque",Simulator::Now().GetSeconds());
 
 			list.push_back(item);
 
@@ -78,9 +78,8 @@ namespace ns3 {
 					//pifoenque+1
 					GearboxPktTag tag;
         				item->GetPacket()->PeekPacketTag(tag);
-					int pifoenque = tag.GetPifoenque()+1;
-					tag.SetPifoenque(pifoenque);
-					item->GetPacket()->ReplacePacketTag(tag);
+					Replace_string h = Replace_string();
+					h.FixNewFile(item, tag.GetUid(), "pifoenque",Simulator::Now().GetSeconds());
 		
 					list.push_back(item); // insert into the end
 
@@ -97,9 +96,8 @@ namespace ns3 {
 					//pifoenque+1
 					GearboxPktTag tag;
         				item->GetPacket()->PeekPacketTag(tag);
-					int pifoenque = tag.GetPifoenque()+1;
-					tag.SetPifoenque(pifoenque);
-					item->GetPacket()->ReplacePacketTag(tag);
+					Replace_string h = Replace_string();
+					h.FixNewFile(item, tag.GetUid(), "pifoenque",Simulator::Now().GetSeconds());
 
 					list.insert(list.begin() + k, item); //insert into the index of k
 
@@ -125,10 +123,9 @@ namespace ns3 {
 				GearboxPktTag tag;
 
         			re->GetPacket()->PeekPacketTag(tag);
-				int pifodeque = tag.GetPifodeque()+1;
+				Replace_string h = Replace_string();
+				h.FixNewFile(item, tag.GetUid(), "pifodeque",Simulator::Now().GetSeconds());
 
-				tag.SetPifodeque(pifodeque);
-				re->GetPacket()->ReplacePacketTag(tag);
 
 				//cout<<"pifodeque times is "<<pifodeque;
 			}
@@ -155,10 +152,8 @@ namespace ns3 {
 			GearboxPktTag tag;
 
         		popitem->GetPacket()->PeekPacketTag(tag);
-			int pifodeque = tag.GetPifodeque()+1;
-
-			tag.SetPifodeque(pifodeque);
-			popitem->GetPacket()->ReplacePacketTag(tag);
+			Replace_string h = Replace_string();
+			h.FixNewFile(popitem, tag.GetUid(), "pifodeque",Simulator::Now().GetSeconds());
 	
 			//cout<<"@@@@@@@@@@@pifoenque "<<tag.GetPifoenque()<<endl;
 			//cout<<"pifodeque times is "<<pifodeque;
@@ -227,7 +222,7 @@ namespace ns3 {
 			ObjectBase* instance = constructor();
 			GearboxPktTag* tag = dynamic_cast<GearboxPktTag*> (instance);
 			ititem.GetTag(*tag);
-			cout << "(" << i << ": " << tag->GetDepartureRound() << ", " << tag->GetPifoenque() <<") ";
+			cout << "(" << i << ": " << tag->GetDepartureRound()<<") ";
 		}
 		cout << endl;
 	}
