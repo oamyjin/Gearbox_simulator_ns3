@@ -893,7 +893,7 @@ namespace ns3 {
 				cout << "levels[j].finishCurrentFifoReload():" << levels[j].finishCurrentFifoReload() << " levels[j].ifLowerthanL():" << levels[j].ifLowerthanL() << endl;
 			}
 		
-			if(levels[j].finishCurrentFifoReload()&&!levels[j].ifLowerthanL()){
+			if(levels[j].finishCurrentFifoReload()){
 				//cout << "TerminateReload" << endl;
 				levels[j].TerminateReload();
 				levels[j].setRemainingQ(SPEEDUP_FACTOR);
