@@ -311,8 +311,8 @@ ThroughputMonitor (FlowMonitorHelper* fmhelper, Ptr<FlowMonitor> monitor)
         int src_No = GetHostNumber(t.sourceAddress);
         int dst_No = GetHostNumber(t.destinationAddress);
         uint16_t src_port = t.sourcePort;
-        int k = src_No - 1; 
-
+        uint32_t k = (src_No - 1)<<16 | src_port; 
+       
 
         stringstream dstip;
         dstip << "10.1." << CLIENT_CNT + SERVER_CNT << ".2";
