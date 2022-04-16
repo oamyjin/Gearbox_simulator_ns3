@@ -6,7 +6,7 @@
 *   q(N-1) ======
 **/
 
-#include "ns3/Level_flex.h"
+#include "ns3/Level_flex_pFabric.h"
 #include "ns3/Flow_pl.h"
 #include "ns3/Replace_string.h"
 #include <cmath>
@@ -21,7 +21,7 @@
 #include "ns3/ipv6-header.h"
 #include "ns3/tcp-header.h"
 #include "ns3/ptr.h"
-#include "sp-pifo.h"
+#include "sp-pifo_pFabric.h"
 #include "ns3/queue.h"
 #include "ns3/queue-disc.h"
 #include "ns3/log.h"
@@ -50,13 +50,10 @@ namespace ns3 {
 
 	maxUid = 0;
         currentRound = 0;
-	for (int i =0;i<3;i++){
-		levels[i].SetLevel(i);
-	}
 	/*
 	// initialize flow weights
 	ifstream infile;
-	infile.open("/home/pc/ns-allinone-3.26/ns-3.26/scratch/weights.txt");
+	infile.open("scratch/weights.txt");
 	int no = 0;
 	infile >> no;
         for (int i = 0; i < no; i++){
@@ -64,7 +61,8 @@ namespace ns3 {
 		infile >> temp;
 		weights.push_back(temp);
 	}
-	infile.close();*/
+	infile.close();
+	*/
 	int no = 0;
 	///*pfabric
 	ifstream infile1;
@@ -82,37 +80,7 @@ namespace ns3 {
 	}
 
 	infile1.close();
-	/*
-	ifstream infile2;
-	string pkts_size;
-	int line = 0;
-	infile2.open("scratch/packets.txt");
-	while (getline (infile2, pkts_size)){
 	
-			
-			//cout << pkts_size << endl;
-			char input[1000000];
-			//cout<<"$$$$$$"<<(int)pkts_size.length()<<endl;
-			for(int i = 0; i < (int)pkts_size.length(); i++){
-				input[i] = pkts_size[i];
-			}
-			input[pkts_size.length()] = '\0';
-			const char *d = " ";
-			char *p;
-			//cout<<input<<endl;
-			p = strtok(input,d);
-			while(p)
-			{
-	
-			        packetList[line].push_back(atoi(p));
-				p=strtok(NULL,d);
-				//int packetsize = packetList[line].back();
-				//cout<<packetsize<<endl;
-			}
-			//cout<<"!"<<line<<endl;
-			line++;
-	}*/
-
         factory.SetTypeId("ns3::DropTailQueue");
         factory.Set("Mode", EnumValue(Queue::QUEUE_MODE_PACKETS));
         factory.Set("MaxPackets", UintegerValue(DEFAULT_FIFO_N_SIZE));
@@ -121,7 +89,6 @@ namespace ns3 {
             uint32_t maxSize = DEFAULT_FIFO_N_SIZE;
             Per_flow_queues[i]->SetMaxPackets(maxSize);
         }
-	//*/
 
 
 	cout << "SP-Pifo CREATED" << endl;
@@ -153,8 +120,8 @@ namespace ns3 {
 	Flowlist.push_back(fid);
         string key = convertKeyValue(fid); 
         Flow_pl* newFlowPtr = new Flow_pl(fid, fno, weight, burstness, flowsize);
-	//std::ofstream thr1 ("GBResult_pFabric/weight.dat", std::ios::out | std::ios::app);
-	//thr1 << fno << " " << weight << endl;
+	std::ofstream thr1 ("GBResult_pFabric/weight.dat", std::ios::out | std::ios::app);
+	thr1 << fno << " " << weight << endl;
 	newFlowPtr->setStartTime(Simulator::Now().GetSeconds());
         this->flowMap.insert(pair<string, Flow_pl*>(key, newFlowPtr));
         return this->flowMap[key];
@@ -171,18 +138,10 @@ namespace ns3 {
 		weight = 8;
 	    }*/
 	    //int weight = weights.at(flowNo);
-	    ///*pFabric
 	    int flowSize = flowsize.at(flowNo);
-	    //vector<int> packet_List = packetList[flowNo];
-	    //*/
 	    flowNo++;
-	    ///*pFabric
 	    this->enqueMap[flowNo] = 0;
 	    return this->insertNewFlowPtr(flowlabel,flowNo, weight, flowSize, {}, DEFAULT_BURSTNESS);
-	    //*/
-	    /*SFQ
-	    return this->insertNewFlowPtr(flowlabel,flowNo, weight, 1, DEFAULT_BURSTNESS);
-	    */
         }
         return this->flowMap[key];
     }
@@ -191,71 +150,33 @@ namespace ns3 {
     int SpPifo_pFabric::updateFlowPtr(int departureRound, string fid, Flow_pl* flowPtr) {
         string key = convertKeyValue(fid); 
 	// update flow info
-	/*SFQ
-        flowPtr->setLastFinishRound(departureRound + flowPtr->getWeight());    // only update last packet finish time if the packet wasn't dropped
-        this->flowMap.insert(pair<string, Flow_pl*>(key, flowPtr));
-	*/
-	///*pFabric
 	int remainingsize = flowPtr->getRemaningSize();
 	//cout<<"list size"<<pktsList.size()<<endl;
 	int remaining = 0 > (remainingsize-1) ? 0 : remainingsize-1;
 	flowPtr->setRemaningSize(remaining);
 	this->flowMap.insert(pair<string, Flow_pl*>(key, flowPtr));
-	/*
-	vector<int> pktsList = flowPtr->getPacketList();
-	if(pktsList.size() != 0){
-		int packetSize = pktsList.front();
-  		pktsList.erase(pktsList.begin());
-		//cout<<remainingsize<<" "<<packetSize<<endl;
-		if((remainingsize-packetSize) >0){
-			flowPtr->setRemaningSize(remainingsize-packetSize);
-			//cout<<"!"<<remainingsize-packetSize<<endl;
-			flowPtr->setPacketList(pktsList);
-			this->flowMap.insert(pair<string, Flow_pl*>(key, flowPtr));
-		}
-		else{
-			flowPtr->setRemaningSize(0);
-			flowPtr->setPacketList(pktsList);
-			this->flowMap.insert(pair<string, Flow_pl*>(key, flowPtr));
-		}
-	}*/
-	
-	
-	
-	//*/
+
         return 0;
     }
 
 
     int SpPifo_pFabric::RankComputation(QueueDiscItem* item, Flow_pl* currFlow){
 	// calculate the rank(departureRound) value
-	/*SFQ
-	int curLastFinishRound = currFlow->getLastFinishRound();
-	return max(currentRound, curLastFinishRound);
-	*/
-	///*pFabric
-	int departureRound = currFlow->getRemaningSize();	
-	//cout<<"remaining size"<<departureRound<<endl;
+	int departureRound = currFlow->getRemaningSize();
 	return departureRound;
-	//*/
     }
 
 
     bool SpPifo_pFabric::DoEnqueue(Ptr<QueueDiscItem> item) {
-	enque += 1;
+	
         NS_LOG_FUNCTION(this);
 	
 	Ptr<const Ipv4QueueDiscItem> ipItem = DynamicCast<const Ipv4QueueDiscItem>(item);
 	const Ipv4Header ipHeader = ipItem->GetHeader();
-	///*pFabric
 	int index = getFlowPtr(getFlowLabel(item))->getFlowNo();
 	bool enqueflow = this->enqueMap[index];
-	//*/
-	/*SFQ
-	bool enqueflow = 0;
-	*/
-	//cout<<"!"<<enqueflow<<endl;
 	if(enqueflow == 0){
+		enque += 1;
 		uid = uid + 1;
 		maxUid = uid > maxUid ? uid : maxUid;
 
@@ -263,29 +184,19 @@ namespace ns3 {
 		string flowlabel = getFlowLabel(item);
 		Flow_pl* currFlow = getFlowPtr(flowlabel);
 		int rank = RankComputation(GetPointer(item), currFlow);
-		//cout<<"flow id"<<getFlowPtr(getFlowLabel(item))->getFlowNo()<<"rank"<<rank<<endl;
-		stringstream ss;
-		ss << "Enque_"<< getFlowPtr(getFlowLabel(item))->getFlowNo()<<".txt";
-		string filename = ss.str();
-		RecordFlow(flowlabel, rank,uid,filename);
 
-		// drop the pkt if its rank is larger than the available rank range
-		if (rank - currentRound > RANK_RANGE){
-			Drop(item);
-			drop += 1;
-			std::ofstream thr1 ("GBResult_pFabric/SpPifo_pFabricdrop.dat", std::ios::out | std::ios::app);
-			thr1 << Simulator::Now().GetSeconds() << " " << rank<<" "<<drop << endl;
-			return false;
+		if((uid > 85365)&& (uid < 85700)){
+			for (int k = 0; k < DEFAULT_PQ; k++){
+				FifoPrint(k);
+			}	
 		}
 
 		// add tag values, including rank and uid
 		GearboxPktTag tag;
 		Packet* packet = GetPointer(item->GetPacket());
-		//cout<<"Doenque packet size"<<packet->GetSize()<<endl;
 		packet->PeekPacketTag(tag);
-		packet->AddPacketTag(GearboxPktTag(rank, Simulator::Now().GetSeconds(), uid));
+		packet->AddPacketTag(GearboxPktTag(currFlow->getFlowNo(), uid, rank));
 
-		//cout<<"rank:"<<rank<<endl;
 
 		// 2. enque to the target queue with bottom-up comparisions
 		for (int i = DEFAULT_PQ - 1; i >= 0 ; i--){
@@ -293,47 +204,41 @@ namespace ns3 {
 			if (rank >= bounds[i]){
 				if (this->GetQueueSize(i) < DEFAULT_VOLUME){
 					// enque
-					if (rank > 80 && rank < 100){
-						//cout << endl << "En " << this->GetQueueSize(6) << " " <<this->GetQueueSize(7) << endl;
-					}
-					fifos[i]->Enqueue(Ptr<QueueDiscItem>(item));
-					if (rank > 80 && rank < 100){
-						GearboxPktTag tag0;
-						GetPointer(item->GetPacket())->PeekPacketTag(tag0);
-						//cout << "dp:" << tag0.GetDepartureRound() << " uid:" << uid << " " << Simulator::Now().GetSeconds() << endl;
-						//cout << "i:" << i << " bound:" << bounds[i] << " q6:" << this->GetQueueSize(6) << " q7:" << this->GetQueueSize(7) << endl;
-					}		
+					fifos[i]->Enqueue(Ptr<QueueDiscItem>(item));	
 
 					enpkt += 1;
 					size += 1; // trace size in sp-pifo
 				
 					std::ofstream thr ("GBResult_pFabric/SpPifo_pFabricQBounds.dat", std::ios::out | std::ios::app);
-					thr << Simulator::Now().GetSeconds() << " ";
+					thr << Simulator::Now().GetSeconds()<<" " ;
 					for (int k = 0; k < DEFAULT_PQ; k++){
 						thr << bounds[k] << " ";
 					}
 					thr << endl;
 				
 					this->Record("EnqueuedPktsList.txt", item);
-					std::ofstream thr3 ("GBResult_pFabric/pktsList/Enque_bound8.dat", std::ios::out | std::ios::app);
+					/*std::ofstream thr3 ("GBResult_pFabric/pktsList/Enque_bound8.dat", std::ios::out | std::ios::app);
 					thr3 << "(" << rank - bounds[7] << "," << i << "," << currFlow->getFlowNo() << ")" << " ";
 					std::ofstream thr4 ("GBResult_pFabric/pktsList/Size.dat", std::ios::out | std::ios::app);
 					thr4 << "(" << i << "," << this->GetQueueSize(i) << "," << currFlow->getFlowNo() << ")" << " ";
 					std::ofstream thr5 ("GBResult_pFabric/pktsList/SizePlot7.dat", std::ios::out | std::ios::app);
 					thr5 << Simulator::Now().GetSeconds() << " " << this->GetQueueSize(7) << endl;
 					std::ofstream thr6 ("GBResult_pFabric/pktsList/SizePlot6.dat", std::ios::out | std::ios::app);
-					thr6 << Simulator::Now().GetSeconds() << " " << this->GetQueueSize(6) << endl;
+					thr6 << Simulator::Now().GetSeconds() << " " << this->GetQueueSize(6) << endl;*/
 				
 
 					// update queue bound
 					bounds[i] = rank;
-					/*for(int i = 0; i<DEFAULT_PQ; i++){
-						FifoPrint(i);
-					}*/
+					// record into the map which records all pkts who are currently in the system
+					addSchePkt(uid, rank);
 					// updat the flow's last finish time
-					this->updateFlowPtr(rank, flowlabel, currFlow); // enqueued succefuly into fifo
-					levels[0].addSchePkt(uid, rank); // record into the map which records all pkts who are currently in the system
+					this->updateFlowPtr(rank, flowlabel, currFlow);
 					this->enqueMap[index] = 1;
+					//record each flow
+					stringstream ss;
+					ss << "Enque_"<< index<<".txt";
+					string filename = ss.str();
+					RecordFlow(flowlabel, rank, uid, filename );
 					return true;
 				}
 				// fifo overflow
@@ -341,7 +246,7 @@ namespace ns3 {
 					Drop(item);
 					drop += 1;
 					std::ofstream thr1 ("GBResult_pFabric/SpPifo_pFabricdrop.dat", std::ios::out | std::ios::app);
-					thr1 << Simulator::Now().GetSeconds() << " " << rank<<" "<<drop << endl;
+					thr1 << Simulator::Now().GetSeconds() << " " << drop << endl;
 					return false;
 				}
 			}
@@ -351,6 +256,17 @@ namespace ns3 {
 					if (this->GetQueueSize(i) < DEFAULT_VOLUME){
 						// enque
 						fifos[i]->Enqueue(Ptr<QueueDiscItem>(item));
+						// record into the map which records all pkts who are currently in the system
+						addSchePkt(uid, rank);
+						// updat the flow's last finish time
+						this->updateFlowPtr(rank, flowlabel, currFlow);
+						this->enqueMap[index] = 1;
+						//record each flow
+						stringstream ss;
+						ss << "Enque_"<< index<<".txt";
+						string filename = ss.str();
+						RecordFlow(flowlabel, rank, uid, filename );
+
 						// update all queue bounds
 						int cost = bounds[i] - rank;
 						bounds[i] = rank;
@@ -366,59 +282,38 @@ namespace ns3 {
 						}
 						thr << endl;
 						this->Record("EnqueuedPktsList.txt", item);
-						std::ofstream thr3 ("GBResult_pFabric/pktsList/Enque_bound8.dat", std::ios::out | std::ios::app);
-						thr3 << Simulator::Now().GetSeconds() << rank - bounds[7] << endl;
+
+						/*std::ofstream thr3 ("GBResult_pFabric/pktsList/Enque_bound8.dat", std::ios::out | std::ios::app);
+						thr3 << Simulator::Now().GetSeconds() << rank - bounds[7] << endl;*/
+						return true;
 					}
 					// fifo overflow
 					else{
 						Drop(item);
 						drop += 1;
 						std::ofstream thr1 ("GBResult_pFabric/SpPifo_pFabricdrop.dat", std::ios::out | std::ios::app);
-						thr1 << Simulator::Now().GetSeconds() << " " << rank<<" "<<drop << endl;
+						thr1 << Simulator::Now().GetSeconds() << " " << drop << endl;
+						return false;
 					}	
-				}
-				else{
-					continue;
 				}
 			}
 		}
-		/*
-		for(int i = 0; i<DEFAULT_PQ; i++){
-			FifoPrint(i);
-		}*/
-		this->enqueMap[index] = 1;
 		// updat the flow's last finish time
-		this->updateFlowPtr(rank, flowlabel, currFlow); // enqueued succefuly into fifo
-		levels[0].addSchePkt(uid, rank); // record into the map which records all pkts who are currently in the system
 		return true;
 	}
 	else{
-		///*pFabric
-		//enqueue into per flow queue
 		if ((Per_flow_queues[index]->GetNPackets() < DEFAULT_FIFO_N_SIZE)){
 			Per_flow_queues[index]->Enqueue(Ptr<QueueDiscItem>(item));
-			/*cout<<"Per Flow Queue print"<<endl;
-			for (int i = 0; i < this->GetQueueSize(index); i++)
-  			{	
-				Ptr<QueueItem> item = Per_flow_queues[index]->Dequeue();
-		    		Packet* packet = GetPointer(item->GetPacket());
-			 	GearboxPktTag tag;
-				packet->PeekPacketTag(tag);
-				cout << " (" << i << ", " << tag.GetDepartureRound() << ", " << tag.GetUid() << ") ";
-				Per_flow_queues[index]->Enqueue(item);
-  			}*/
 			return true;
 		}
 		else{
 			Drop(item);
-			//cout<<"drop per flow queue: "<<index<<endl;
-			std::ofstream thr1 ("GBResult_pFabric/SpPifo_pFabricdrop.dat", std::ios::out | std::ios::app);
-			thr1 << Simulator::Now().GetSeconds() << "drop " << drop << endl;
+			drop_perQ += 1;
 			return false;
 		}
-		//*/
-		
 	}
+	
+
     }
 
 
@@ -427,18 +322,6 @@ namespace ns3 {
 
         if (size <= 0) {
 	    empty += 1;
-	    /*SFQ
-		FlowMap::iterator it;
-		int i = 1;
-		for (it = flowMap.begin(); it != flowMap.end(); it++) {
-			string s = it->first;
-			double FCT = flowMap[s]->getFinishTime() - flowMap[s]->getStartTime();
-			RecordFCT("FCT.txt", flowMap[s]->getFlowNo(),FCT);
-			cout<<"%"<<flowMap[s]->getFlowNo()<<endl;
-			i++;
-
-		}
-		*/
             return 0;
         }
 	Ptr<QueueDiscItem> item;
@@ -446,29 +329,30 @@ namespace ns3 {
 	for (int i = 0; i < DEFAULT_PQ; i++){
 		if (this->GetQueueSize(i) > 0){	
 			item = StaticCast<QueueDiscItem>(fifos[i]->Dequeue());
-			
+			depkt += 1;
+			this->Record("DequeuedPktsList.txt", item);
 			size -= 1;
 
 			// update vt to be the pkt's rank
 			GearboxPktTag tag;
 			GetPointer(item->GetPacket())->PeekPacketTag(tag);
-			//cout<<"deque"<<tag.GetDepartureRound()<<endl;
-			//currentRound = tag.GetDepartureRound();
-			//currentRound = 0;
+			currentRound = tag.GetDepartureRound();
 			break;
 		}
 	}
-	
+	GearboxPktTag tag;
+        item->GetPacket()->PeekPacketTag(tag);
 	if(item != NULL){
-		
-		levels[0].removeSchePkt(tag.GetUid());
-		int inversion = levels[0].cal_inversion_mag(tag.GetDepartureRound());
+		removeSchePkt(tag.GetUid());
+		int inversion = cal_inversion_mag(tag.GetDepartureRound());
 		if (inversion > 0){
 			inv_count += 1;
 			inv_mag += inversion;
 		}
 		std::ofstream thr2 ("GBResult_pFabric/inversion_record.dat", std::ios::out);
 		thr2 << "count: " << inv_count << "  magnitude: " << inv_mag << endl;
+		std::ofstream thr ("GBResult_pFabric/CountStat.dat", std::ios::out);
+		thr <<  Simulator::Now().GetSeconds() << " enque:" << enque << " deque:" << deque << " drop:" << drop <<" drop_perQ:" << drop_perQ  << " flowNo:" << flowNo << std::endl;
 
 		//cout<<"deque rank"<<currentRound<<endl;
 		string flowlabel = getFlowLabel(item);
@@ -492,13 +376,8 @@ namespace ns3 {
 		}
 		//*/
 	}
-	
-
-	depkt += 1;
 	this->Record("DequeuedPktsList.txt", item);
 	
-	GearboxPktTag tag;
-        item->GetPacket()->PeekPacketTag(tag);
 	stringstream ss;
 	ss << "Deque_"<< getFlowPtr(getFlowLabel(item))->getFlowNo()<<".txt";
 	string filename = ss.str();
@@ -607,15 +486,30 @@ namespace ns3 {
 	cout << "q" << index << " : b" << bounds[index];
 	for (int i = 0; i < this->GetQueueSize(index); i++)
   	{	
-		Ptr<QueueItem> item = fifos[index]->Dequeue();
+		Ptr<QueueDiscItem> item = StaticCast<QueueDiscItem>(fifos[index]->Dequeue());
     		Packet* packet = GetPointer(item->GetPacket());
 	 	GearboxPktTag tag;
 		packet->PeekPacketTag(tag);
-		cout << " (" << i << ", " << tag.GetDepartureRound() << ", " << tag.GetUid() << ") ";
+		cout << " (" << i << ", " << tag.GetDepartureRound() << ", " << tag.GetUid() << "," <<getFlowPtr(getFlowLabel(item))->getFlowNo() << ") ";
 		fifos[index]->Enqueue(item);
   	}
 	cout << endl;
     }
+
+   void SpPifo_pFabric::RecordFlow(string flowlabel, int departureRound, int uid,string filename){
+	string path = "GBResult_pFabric/pktsList/";
+	path.append(filename);
+
+	FILE *fp;
+	fp = fopen(path.data(), "a+"); //open and write
+	fprintf(fp, "(%d,", departureRound);
+	fprintf(fp, "%d,", uid);
+	fprintf(fp, "%f,", Simulator::Now().GetSeconds());
+	fprintf(fp, "%d),", getFlowPtr(flowlabel)->getFlowNo());
+	fprintf(fp, "\t");
+	fclose(fp);
+    }
+
 
     void SpPifo_pFabric::RecordFCT(string filename, int index,double FCT){
 	string path = "GBResult_pFabric/";
@@ -629,19 +523,30 @@ namespace ns3 {
 	fclose(fp);
     }
 
-     void SpPifo_pFabric::RecordFlow(string flowlabel, int departureRound, int uid,string filename){
-	string path = "GBResult_pFabric/pktsList/";
-	path.append(filename);
-
-	FILE *fp;
-	fp = fopen(path.data(), "a+"); //open and write
-	fprintf(fp, "(%d,", departureRound);
-	fprintf(fp, "%d,", uid);
-	fprintf(fp, "%f,", Simulator::Now().GetSeconds());
-	fprintf(fp, "%d),", getFlowPtr(flowlabel)->getFlowNo());
-	fprintf(fp, "\t");
-	fclose(fp);
+    int SpPifo_pFabric::addSchePkt(int uid, int departureRound){
+	qpkts[uid] = departureRound;
+	return qpkts.size();
     }
+
+    int SpPifo_pFabric::removeSchePkt(int uid){
+	if (0 == qpkts.erase(uid)){
+		cout << "cannot erase from map" << endl;
+	}
+	return qpkts.size();
+    }
+
+
+    int SpPifo_pFabric::cal_inversion_mag(int dp){
+	int magnitude = 0;
+	for (auto it = qpkts.begin(); it != qpkts.end(); ++it) {
+		// compare the dequeued dp with all pkts' dp in the scheduler
+		if (dp > it->second){
+			magnitude += dp - it->second;
+		}
+	}
+	return magnitude;
+    }
+
 
 }
 
