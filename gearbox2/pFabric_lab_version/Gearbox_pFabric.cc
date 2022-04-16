@@ -137,7 +137,6 @@ namespace ns3 {
 	stringstream ss;
         ss << ipHeader.GetSource ().Get ()<<header.GetSourcePort()<<header.GetDestinationPort();  // Peixuan 04212020
         string flowLabel = ss.str();
-
 	return flowLabel;
     }
 
@@ -149,11 +148,11 @@ namespace ns3 {
         if (flowMap.find(key) == flowMap.end()) {
 	    int weight = DEFAULT_WEIGHT;
 	    //int weight = weights.at(flowNo);
-	    int flowSize = flowsize.at(flowNo);
+	    int fs = flowsize.at(flowNo);
 	    //vector<int> packet_List = packetList[flowNo];
 	    flowNo++;
 	    this->enqueMap[flowNo] = 0;
-	    return this->insertNewFlowPtr(flowlabel,flowNo, weight, flowSize, {}, DEFAULT_BURSTNESS);
+	    return this->insertNewFlowPtr(flowlabel,flowNo, weight, fs, {}, DEFAULT_BURSTNESS);
 
         }
         return this->flowMap[key];
@@ -162,7 +161,6 @@ namespace ns3 {
 
     bool Gearbox_pFabric::DoEnqueue(Ptr<QueueDiscItem> item) {
         NS_LOG_FUNCTION(this);
-
 	// debug
 	/*if(currentRound >= 69109 && currentRound <= 4000){
 		cout << endl << "vt:" << currentRound << endl;
@@ -172,9 +170,7 @@ namespace ns3 {
         Ptr<const Ipv4QueueDiscItem> ipItem = DynamicCast<const Ipv4QueueDiscItem>(item);
 	const Ipv4Header ipHeader = ipItem->GetHeader();
 	int departureRound;
-
 	int index1 = getFlowPtr(getFlowLabel(item))->getFlowNo();
-	
 	bool enque = this->enqueMap[index1];
 	if(enque == 0){
 		uid = uid + 1;
@@ -186,9 +182,8 @@ namespace ns3 {
 
 		// calculate rank value, which is the value of departure round in this case	
 		departureRound = RankComputation(GetPointer(item), currFlow);
-
 		// record the difference of the rank and vt to file
-		rankDifference[departureRound - currentRound] += 1;
+		//rankDifference[departureRound - currentRound] += 1;
 
 		/*std::ofstream thr ("GBResult_pFabric/pktsList/rankVtDifference.dat", std::ios::out | std::ios::app);
 		thr << departureRound - currentRound << " ";*/
@@ -204,7 +199,7 @@ namespace ns3 {
 		AddTag(flowNo, departureRound, uid, GetPointer(item));
 		//cout<<"addtag"<<departureRound<<endl;
 		Record("EnqueuedPktsList.txt", departureRound, item);	
-
+		
 		if (departureRound > ((currentRound / GRANULARITY) * GRANULARITY + (GRANULARITY * FIFO_PER_LEVEL) - 1)) {// FIFO_PER_LEVEL * GRANULARITY) {
 		    	Drop(item);
 
@@ -221,7 +216,6 @@ namespace ns3 {
 		}
 
 		int curBurstness = currFlow->getBurstness();
-
 		if ((departureRound - currentRound) >= curBurstness) {
 		    	Drop(item);
 
@@ -233,7 +227,7 @@ namespace ns3 {
 			dropCount = dropCount+1;
 			dropCountA = dropCountA+1;
 			this->setDropCount(dropCount);
-
+			
 		    	return false;   // exceeds the maximum burstness
 
 		}		
@@ -283,6 +277,11 @@ namespace ns3 {
 					this->updateFlowPtr(departureRound, flowlabel, currFlow); // enqueued succefuly into pifo, another packet is evicted from fifo
 					levels[0].addSchePkt(uid, departureRound); // record into the map which records all pkts who are currently in the system
 					levels[0].removeSchePkt(tag1.GetUid());
+					//record each flow
+					stringstream ss;
+					ss << "Enque_"<< index1<<".txt";
+					string filename = ss.str();
+					RecordFlow(getFlowLabel(item), departureRound,uid, filename );
 				}
 
 				/*if (tag1.GetFifodeque() + tag1.GetPifodeque() != 0){
@@ -304,7 +303,6 @@ namespace ns3 {
 				if(currentRound >= 69109 && currentRound <= 6800){
 					cout << "drop" << endl;
 				}
-
 				return true;
 			}
 			else {
@@ -319,6 +317,11 @@ namespace ns3 {
 				this->enqueMap[index1] = 1;
 				this->updateFlowPtr(departureRound, flowlabel, currFlow); // enqueued succefuly into fifo
 				levels[0].addSchePkt(uid, departureRound); // record into the map which records all pkts who are currently in the system
+				//record each flow
+				stringstream ss;
+				ss << "Enque_"<< index1<<".txt";
+				string filename = ss.str();
+				RecordFlow(flowlabel, departureRound, uid, filename );
 				return true;
 			}
 		}
@@ -334,6 +337,12 @@ namespace ns3 {
 			this->enqueMap[index1] = 1;
 			this->updateFlowPtr(departureRound, flowlabel, currFlow); // enqueued succefuly into pifo
 			levels[0].addSchePkt(uid, departureRound); // record into the map which records all pkts who are currently in the system
+			//record each flow
+			stringstream ss;
+			ss << "Enque_"<< index1<<".txt";
+			string filename = ss.str();
+			RecordFlow(flowlabel, departureRound, uid, filename );
+
 		    	return true;
 		}
 	}
@@ -345,6 +354,7 @@ namespace ns3 {
 		else{
 			Drop(item);
 			cout<<"drop per flow queue: "<<index1<<endl;
+			drop_perQ += 1;
 			return false;
 		}
 		
@@ -666,7 +676,7 @@ namespace ns3 {
 			<< " pifoenque:" << levels[0].getPifoEnque() << " pifodeque:" << levels[0].getPifoDeque()
 			<< " reload:"<< levels[0].getReload() << " reloadIni:" << levels[0].getReloadIni() 
 			<< " uid:" << maxUid << " vt:" << currentRound 
-                        << " drop:" << getDropCount() << " = dropA:" << dropCountA << " + dropB:" << dropCountB << " - dropC:" << dropCountC
+                        << " drop:" << getDropCount() << " = dropA:" << dropCountA << " + dropB:" << dropCountB << " - dropC:" << dropCountC <<", drop_perQ" << drop_perQ
 			<< " flowNo:" << flowNo << " empty" << std::endl;
 		return;
 	}
