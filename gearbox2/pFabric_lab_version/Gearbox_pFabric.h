@@ -26,7 +26,7 @@ using namespace std;
 
 namespace ns3 {
 
-    class pFabric : public QueueDisc {
+    class Gearbox_pFabric : public QueueDisc {
 
     private:
 
@@ -36,7 +36,7 @@ namespace ns3 {
         static const int DEFAULT_BURSTNESS = 20000;  // default burstness
  	static const int SPEEDUP_FACTOR = 4; // default speed up
         static const int GRANULARITY = 800; // granularity per fifo
-	static const int DEFAULT_FIFO_N_SIZE = 20;  //per flow queue
+	static const int DEFAULT_FIFO_N_SIZE = 1000;  //per flow queue
 
         int volume;  // num of Level_flexs in scheduler
         int currentRound;  // current Round
@@ -46,6 +46,7 @@ namespace ns3 {
         int dequeCount; // # of dequeue operations
         int reloadCount = 0; // # of ptks reload operations
         int dropCount = 0; // total # of dropped pkts
+	int drop_perQ = 0;
         int dropCountA = 0; // # of dropped pkts because of too large range
         int dropCountB = 0; // # of dropped pkts because of fifo overflow
         int dropCountC = 0; // # of dropped pkts which had been enqueued into pifo or fifo
@@ -81,12 +82,12 @@ namespace ns3 {
         static TypeId GetTypeId(void);
 
         /**
-        * \brief pFabric constructor
+        * \brief Gearbox_pFabric constructor
         * Creates a queue with a default or customed number of packets
         */
-        pFabric();
-        explicit pFabric(int);
-        virtual ~pFabric();
+        Gearbox_pFabric();
+        explicit Gearbox_pFabric(int);
+        virtual ~Gearbox_pFabric();
 
         int flowNo;
 	ifstream flowf;
